@@ -1,0 +1,473 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Painel de SMS Cloud</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        .description-cell {
+            min-width: 400px;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+        }
+        .sms-badge {
+            font-family: monospace;
+            background-color: #eff6ff;
+            color: #1d4ed8;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-weight: 600;
+        }
+        .tab-active {
+            border-bottom: 3px solid #1d4ed8;
+            color: #1d4ed8;
+            font-weight: bold;
+        }
+        .loading-overlay {
+            display: none;
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(255, 255, 255, 0.8);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+        }
+        .custom-scroll::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+        .custom-scroll::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 10px;
+        }
+        input[type="date"]::-webkit-calendar-picker-indicator {
+            cursor: pointer;
+            opacity: 0.6;
+            transition: 0.2s;
+        }
+        input[type="date"]::-webkit-calendar-picker-indicator:hover {
+            opacity: 1;
+        }
+    </style>
+</head>
+<body class="bg-slate-50 min-h-screen p-2 md:p-6 text-slate-900">
+    <!-- Overlay de Carregamento -->
+    <div id="loader" class="loading-overlay">
+        <div class="flex flex-col items-center">
+            <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+            <p id="loaderText" class="mt-4 text-slate-600 font-medium">A processar...</p>
+        </div>
+    </div>
+
+    <!-- Modal de Confirmação de Exclusão -->
+    <div id="deleteModal" class="hidden fixed inset-0 bg-slate-900 bg-opacity-50 z-[2000] flex items-center justify-center">
+        <div class="bg-white rounded-xl shadow-2xl p-6 max-w-sm w-full mx-4">
+            <div class="flex items-center gap-3 mb-4 text-red-600">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                </svg>
+                <h3 class="text-lg font-bold text-slate-800">Excluir SMS</h3>
+            </div>
+            <p class="text-slate-600 mb-6 text-sm">Tem a certeza que deseja excluir o SMS <span id="deleteSmsIdText" class="font-bold text-slate-800"></span>? Esta ação não pode ser desfeita.</p>
+            <div class="flex justify-end gap-3">
+                <button onclick="closeDeleteModal()" class="px-4 py-2 text-sm text-slate-600 hover:bg-slate-100 font-medium rounded-lg transition-colors">Cancelar</button>
+                <button onclick="confirmDelete()" class="px-4 py-2 bg-red-600 hover:bg-red-700 text-white text-sm font-bold rounded-lg transition-colors">Sim, Excluir</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="w-full max-w-[98%] 2xl:max-w-[1900px] mx-auto">
+        <header class="mb-8 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+            <div>
+                <h1 class="text-3xl font-extrabold text-slate-800 tracking-tight">Painel de SMS Estruturado</h1>
+                <p class="text-slate-500 mt-1">Gestão de demandas, previsões e estado.</p>
+            </div>
+            
+            <div class="flex items-center gap-3 bg-white p-3 rounded-xl shadow-sm border border-slate-200">
+                <label class="text-sm font-medium text-slate-600">Subir novo ficheiro TXT:</label>
+                <input type="file" id="fileInput" accept=".txt" class="text-sm text-slate-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100 cursor-pointer">
+            </div>
+        </header>
+
+        <!-- Navegação por Abas -->
+        <div class="flex flex-wrap gap-2 mb-6 border-b border-slate-200 overflow-x-auto custom-scroll">
+            <button onclick="changeTab('ERP')" id="tab-ERP" class="px-6 py-3 text-slate-500 hover:text-blue-600 transition-all tab-btn">ERP</button>
+            <button onclick="changeTab('RH')" id="tab-RH" class="px-6 py-3 text-slate-500 hover:text-blue-600 transition-all tab-btn">RH</button>
+            <button onclick="changeTab('Logística')" id="tab-Logística" class="px-6 py-3 text-slate-500 hover:text-blue-600 transition-all tab-btn">Logística</button>
+            <button onclick="changeTab('Jurídico')" id="tab-Jurídico" class="px-6 py-3 text-slate-500 hover:text-blue-600 transition-all tab-btn">Jurídico</button>
+            <button onclick="changeTab('Saúde')" id="tab-Saúde" class="px-6 py-3 text-slate-500 hover:text-blue-600 transition-all tab-btn">Saúde</button>
+            <button onclick="changeTab('Todos')" id="tab-Todos" class="px-6 py-3 text-slate-500 hover:text-blue-600 transition-all tab-btn tab-active">Todos</button>
+        </div>
+
+        <!-- Filtros e Estatísticas -->
+        <div class="grid grid-cols-1 md:grid-cols-5 gap-4 mb-6">
+            <div class="md:col-span-2">
+                <input type="text" id="searchInput" placeholder="Pesquisar termo ou SMS..." 
+                       class="w-full px-5 py-3 border border-slate-300 rounded-xl shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all">
+            </div>
+            <div class="md:col-span-2">
+                <select id="clientFilter" class="w-full px-5 py-3 border border-slate-300 rounded-xl shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all text-slate-700 bg-white">
+                    <option value="">Filtrar por Cliente (Todos)</option>
+                    <!-- Preenchido via JS -->
+                </select>
+            </div>
+            <div class="bg-white px-5 py-3 rounded-xl shadow-sm border border-slate-200 flex flex-col justify-center items-center">
+                <span class="text-xs text-slate-400 uppercase font-bold tracking-wider">Registos Ativos</span>
+                <span id="rowCount" class="text-2xl font-bold text-blue-600">0</span>
+            </div>
+        </div>
+
+        <!-- Tabela -->
+        <div class="bg-white rounded-2xl shadow-xl overflow-hidden border border-slate-200">
+            <div class="overflow-x-auto">
+                <table class="w-full text-left border-collapse">
+                    <thead>
+                        <tr class="bg-slate-800 text-white">
+                            <th class="px-5 py-4 text-xs font-bold uppercase tracking-wider w-48">Cliente</th>
+                            <th class="px-5 py-4 text-xs font-bold uppercase tracking-wider">SMS / Módulo</th>
+                            <th class="px-5 py-4 text-xs font-bold uppercase tracking-wider">Descrição / Resumo</th>
+                            <th class="px-5 py-4 text-xs font-bold uppercase tracking-wider w-44">Previsão de Entrega</th>
+                            <th class="px-5 py-4 text-xs font-bold uppercase tracking-wider text-center w-24">Ações</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tableBody" class="divide-y divide-slate-200">
+                        <!-- Sincronizado do Firestore -->
+                    </tbody>
+                </table>
+            </div>
+            <div id="noResults" class="hidden p-16 text-center">
+                <p class="text-slate-400 text-lg">Nenhum registo encontrado nesta visualização.</p>
+                <p class="text-slate-400 text-sm mt-2">Altere os filtros ou suba um novo ficheiro .txt</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Firebase SDK -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getFirestore, collection, doc, setDoc, onSnapshot, updateDoc, deleteDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+
+        // === VARIÁVEIS DE ESTADO ===
+        let db, auth, currentUser;
+        let currentData = [];
+        let activeTab = 'Todos';
+        let pendingDeleteId = null;
+
+        // === INICIALIZAÇÃO SILENCIOSA DO FIREBASE ===
+        const firebaseConfig = JSON.parse(__firebase_config);
+        const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
+
+        async function initFirebase() {
+            const app = initializeApp(firebaseConfig);
+            auth = getAuth(app);
+            db = getFirestore(app);
+
+            try {
+                if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
+                    await signInWithCustomToken(auth, __initial_auth_token);
+                } else {
+                    await signInAnonymously(auth);
+                }
+            } catch (err) {
+                console.error("Erro na autenticação silenciosa:", err);
+            }
+
+            onAuthStateChanged(auth, (user) => {
+                if (user) {
+                    currentUser = user;
+                    syncData();
+                }
+            });
+        }
+        initFirebase();
+
+        // === UI References ===
+        const tableBody = document.getElementById('tableBody');
+        const searchInput = document.getElementById('searchInput');
+        const clientFilter = document.getElementById('clientFilter');
+        const rowCount = document.getElementById('rowCount');
+        const noResults = document.getElementById('noResults');
+        const fileInput = document.getElementById('fileInput');
+        const loader = document.getElementById('loader');
+        const loaderText = document.getElementById('loaderText');
+
+        // === FUNÇÕES DE DADOS E SINCRONIZAÇÃO ===
+        function syncData() {
+            if (!currentUser) return;
+            
+            const colRef = collection(db, 'artifacts', appId, 'public', 'data', 'sms_list');
+            
+            onSnapshot(colRef, (snapshot) => {
+                currentData = snapshot.docs.map(doc => doc.data());
+                updateClientDropdown();
+                renderTable();
+            }, (error) => {
+                console.error("Erro ao ler dados:", error);
+            });
+        }
+
+        // Atualiza a lista de clientes no Filtro (Dropdown)
+        function updateClientDropdown() {
+            const currentSelection = clientFilter.value;
+            const clientes = [...new Set(currentData.map(item => item.cliente))].sort();
+            
+            clientFilter.innerHTML = '<option value="">Filtrar por Cliente (Todos)</option>';
+            clientes.forEach(cliente => {
+                const option = document.createElement('option');
+                option.value = cliente;
+                option.textContent = cliente;
+                clientFilter.appendChild(option);
+            });
+            clientFilter.value = currentSelection;
+        }
+
+        // === NOVAS FUNÇÕES: ATUALIZAR DATA E EXCLUIR (COM MODAL) ===
+        window.updateDate = async (smsId, novaData) => {
+            if (!currentUser) return;
+            try {
+                const docRef = doc(db, 'artifacts', appId, 'public', 'data', 'sms_list', smsId);
+                await updateDoc(docRef, { previsao: novaData });
+            } catch (err) {
+                console.error("Erro ao atualizar data:", err);
+            }
+        };
+
+        window.openDeleteModal = (smsId) => {
+            pendingDeleteId = smsId;
+            document.getElementById('deleteSmsIdText').textContent = smsId;
+            document.getElementById('deleteModal').classList.remove('hidden');
+        };
+
+        window.closeDeleteModal = () => {
+            pendingDeleteId = null;
+            document.getElementById('deleteModal').classList.add('hidden');
+        };
+
+        window.confirmDelete = async () => {
+            if (!currentUser || !pendingDeleteId) return;
+            
+            try {
+                const docRef = doc(db, 'artifacts', appId, 'public', 'data', 'sms_list', pendingDeleteId);
+                await deleteDoc(docRef);
+                closeDeleteModal();
+            } catch (err) {
+                console.error("Erro ao excluir SMS:", err);
+                closeDeleteModal();
+            }
+        };
+
+        // Configuração e Função da IA (Gemini)
+        const apiKey = "";
+        
+        async function fetchWithBackoff(url, options, retries = 5) {
+            const delays = [1000, 2000, 4000, 8000, 16000];
+            for (let i = 0; i < retries; i++) {
+                try {
+                    const response = await fetch(url, options);
+                    if (!response.ok) throw new Error(`Erro HTTP: ${response.status}`);
+                    return await response.json();
+                } catch (err) {
+                    if (i === retries - 1) throw err;
+                    await new Promise(res => setTimeout(res, delays[i]));
+                }
+            }
+        }
+
+        window.generateAISummary = async (smsId) => {
+            if (!currentUser) return;
+            
+            const item = currentData.find(i => i.sms === smsId);
+            if (!item || !item.descricao) return;
+
+            // Mostra o feedback visual
+            loaderText.textContent = "A IA está a analisar o pedido...";
+            loader.style.display = 'flex';
+
+            const prompt = `Você é um especialista em suporte de TI e sistemas corporativos. Leia a descrição técnica a seguir e crie um resumo ultra-curto, direto e muito claro (de 5 a 12 palavras no máximo) informando qual é o problema ou a solicitação principal:\n\nDescrição: ${item.descricao}`;
+
+            try {
+                const result = await fetchWithBackoff(
+                    `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${apiKey}`,
+                    {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            contents: [{ parts: [{ text: prompt }] }]
+                        })
+                    }
+                );
+
+                const aiSummary = result.candidates?.[0]?.content?.parts?.[0]?.text?.trim();
+
+                if (aiSummary) {
+                    const docRef = doc(db, 'artifacts', appId, 'public', 'data', 'sms_list', smsId);
+                    await updateDoc(docRef, { resumo: `✨ IA: ${aiSummary}` });
+                    loader.style.display = 'none';
+                    loaderText.textContent = "A processar...";
+                }
+            } catch (err) {
+                console.error("Erro Gemini:", err);
+                // Substituição do alert() bloqueado por um feedback visual não-intrusivo
+                loaderText.textContent = "Erro ao gerar resumo. Tente novamente.";
+                setTimeout(() => {
+                    loader.style.display = 'none';
+                    loaderText.textContent = "A processar...";
+                }, 2500);
+            }
+        };
+
+        // Função de categorização automática
+        function categorizar(texto) {
+            const t = texto.toLowerCase();
+            if (t.includes('contrato') || t.includes('juridico') || t.includes('alçada') || t.includes('legal')) return 'Jurídico';
+            if (t.includes('pagamento') || t.includes('compra') || t.includes('contabil') || t.includes('fiscal') || t.includes('faturamento')) return 'ERP';
+            if (t.includes('funcionario') || t.includes('folha') || t.includes('ponto') || t.includes('rh') || t.includes('beneficio')) return 'RH';
+            if (t.includes('entrega') || t.includes('estoque') || t.includes('logistica') || t.includes('transporte')) return 'Logística';
+            if (t.includes('medico') || t.includes('paciente') || t.includes('prontuario') || t.includes('saude') || t.includes('hospit')) return 'Saúde';
+            return 'ERP';
+        }
+
+        // Upload de novos ficheiros TXT
+        async function uploadData(dataArray) {
+            if (!currentUser) return;
+            loader.style.display = 'flex';
+            
+            try {
+                for (const item of dataArray) {
+                    const docRef = doc(db, 'artifacts', appId, 'public', 'data', 'sms_list', item.sms);
+                    // Usamos setDoc com {merge: true} para não apagar a data de previsão se a SMS já existir
+                    await setDoc(docRef, item, { merge: true });
+                }
+            } catch (err) {
+                console.error("Erro ao salvar:", err);
+            } finally {
+                loader.style.display = 'none';
+            }
+        }
+
+        function parseText(text) {
+            const cleanText = text.replace(/^CLIENTE¬SMS¬DESCRICAO¬RESUMO¬\r?\n?/, '');
+            const entries = cleanText.split(/¬\r?\n/);
+            
+            return entries.map(entry => {
+                const cols = entry.split('¬');
+                if (cols.length >= 2) {
+                    const d = cols[2]?.trim() || "";
+                    const r = cols[3]?.trim() || "";
+                    return {
+                        cliente: cols[0]?.trim() || "",
+                        sms: cols[1]?.trim() || "",
+                        descricao: d,
+                        resumo: r,
+                        modulo: categorizar(d + " " + r),
+                        timestamp: Date.now()
+                    };
+                }
+                return null;
+            }).filter(i => i && i.sms);
+        }
+
+        // === EVENTOS DA INTERFACE ===
+        window.changeTab = (tab) => {
+            activeTab = tab;
+            document.querySelectorAll('.tab-btn').forEach(b => {
+                b.classList.remove('tab-active');
+                if (b.id === `tab-${tab}`) b.classList.add('tab-active');
+            });
+            renderTable();
+        };
+
+        function renderTable() {
+            tableBody.innerHTML = '';
+            
+            const searchTerm = searchInput.value.toLowerCase();
+            const clientTerm = clientFilter.value;
+
+            // Filtro por Aba
+            let filtered = activeTab !== 'Todos' 
+                ? currentData.filter(i => i.modulo === activeTab) 
+                : currentData;
+
+            // Filtro por Cliente (Dropdown)
+            if (clientTerm) {
+                filtered = filtered.filter(i => i.cliente === clientTerm);
+            }
+
+            // Filtro por Texto Livre
+            if (searchTerm) {
+                filtered = filtered.filter(i => 
+                    i.cliente.toLowerCase().includes(searchTerm) ||
+                    i.sms.toLowerCase().includes(searchTerm) ||
+                    i.descricao.toLowerCase().includes(searchTerm) ||
+                    i.resumo.toLowerCase().includes(searchTerm)
+                );
+            }
+
+            rowCount.textContent = filtered.length;
+
+            if (filtered.length === 0) {
+                noResults.classList.remove('hidden');
+            } else {
+                noResults.classList.add('hidden');
+                
+                filtered.forEach(item => {
+                    const tr = document.createElement('tr');
+                    tr.className = "hover:bg-slate-50 transition-colors";
+                    
+                    const dataPrevisao = item.previsao ? item.previsao : '';
+
+                    tr.innerHTML = `
+                        <td class="px-5 py-4 text-sm font-bold text-slate-700 align-top">${item.cliente}</td>
+                        <td class="px-5 py-4 text-sm align-top">
+                            <span class="sms-badge">${item.sms}</span>
+                            <div class="mt-2"><span class="text-[10px] px-2 py-0.5 rounded bg-slate-200 text-slate-600 font-bold uppercase tracking-wider">${item.modulo}</span></div>
+                        </td>
+                        <td class="px-5 py-4 align-top">
+                            <div class="text-sm font-semibold text-slate-800 mb-1">${item.resumo}</div>
+                            <div class="text-xs text-slate-500 description-cell">${item.descricao}</div>
+                        </td>
+                        <td class="px-5 py-4 align-top">
+                            <input type="date" value="${dataPrevisao}" onchange="updateDate('${item.sms}', this.value)" 
+                                   class="w-full text-sm p-2 border border-slate-300 rounded-lg text-slate-700 outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 bg-white transition-all cursor-pointer">
+                        </td>
+                        <td class="px-5 py-4 align-top text-center">
+                            <div class="flex items-center justify-center gap-2">
+                                <button onclick="generateAISummary('${item.sms}')" title="Resumir com IA (Gemini)" class="text-indigo-500 hover:text-indigo-700 hover:bg-indigo-50 p-2 rounded-lg transition-colors">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                        <path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3Z"/>
+                                    </svg>
+                                </button>
+                                <button onclick="openDeleteModal('${item.sms}')" title="Excluir SMS" class="text-slate-400 hover:text-red-500 hover:bg-red-50 p-2 rounded-lg transition-colors">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                                    </svg>
+                                </button>
+                            </div>
+                        </td>
+                    `;
+                    tableBody.appendChild(tr);
+                });
+            }
+        }
+
+        // Listeners
+        fileInput.addEventListener('change', (e) => {
+            const file = e.target.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = async (ev) => {
+                const data = parseText(ev.target.result);
+                await uploadData(data);
+                fileInput.value = "";
+            };
+            reader.readAsText(file);
+        });
+
+        searchInput.addEventListener('input', renderTable);
+        clientFilter.addEventListener('change', renderTable);
+
+    </script>
+</body>
+</html>
