@@ -149,29 +149,70 @@
         import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
         import { getFirestore, collection, doc, setDoc, onSnapshot, updateDoc, deleteDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
+        // ============================================================================
+        // === 1. CONFIGURAÇÃO DE PRODUÇÃO (PARA VERCEL)                            ===
+        // ============================================================================
+        // Se estiver a hospedar no Vercel, preencha os dados do SEU projeto Firebase aqui:
+        const myFirebaseConfig = {
+            apiKey: "AIzaSyCkOgR1EAAyVTshmYHV5_L6vjaXpbEFKe0",
+            authDomain: "sms-s-cdbfc.firebaseapp.com",
+            projectId: "SEU_PROJETO",
+            storageBucket: "SEU_PROJETO.firebasestorage.app",
+            messagingSenderId: "SENDER_ID",
+            appId: "APP_ID"
+        };
+        const myAppId = "meu-painel-sms-producao";
+
+        // Chave do Google Gemini (necessária para a IA funcionar no Vercel)
+        // Obtenha uma em: https://aistudio.google.com/
+        const apiKey = ""; 
+        // ============================================================================
+
         // === VARIÁVEIS DE ESTADO ===
         let db, auth, currentUser;
         let currentData = [];
         let activeTab = 'Todos';
         let pendingDeleteId = null;
 
-        // === INICIALIZAÇÃO SILENCIOSA DO FIREBASE ===
-        const firebaseConfig = JSON.parse(__firebase_config);
-        const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
+        // === LÓGICA DE AMBIENTE HÍBRIDO (CANVAS VS VERCEL) ===
+        let firebaseConfig = myFirebaseConfig;
+        let appId = myAppId;
+
+        try {
+            // Se estiver no ambiente do Canvas, sobrepõe com a config de teste invisível
+            if (typeof __firebase_config !== 'undefined') {
+                firebaseConfig = JSON.parse(__firebase_config);
+                appId = typeof __app_id !== 'undefined' ? __app_id : myAppId;
+            }
+        } catch (e) {
+            console.log("A executar fora do Canvas. A usar a configuração manual.");
+        }
 
         async function initFirebase() {
+            // Verifica se a configuração foi preenchida
+            if (firebaseConfig.apiKey === "SUA_API_KEY" && typeof __firebase_config === 'undefined') {
+                alert("ATENÇÃO: Está a correr a aplicação no Vercel, mas não preencheu as credenciais do Firebase no código (linha ~150). A aplicação não vai funcionar até que as preencha.");
+                return;
+            }
+
             const app = initializeApp(firebaseConfig);
             auth = getAuth(app);
             db = getFirestore(app);
 
             try {
+                // Tenta autenticação do Canvas
                 if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
                     await signInWithCustomToken(auth, __initial_auth_token);
                 } else {
+                    // Para Vercel: Autenticação Anónima
+                    // IMPORTANTE: Deve ativar o "Anonymous" na aba Authentication da sua consola Firebase!
                     await signInAnonymously(auth);
                 }
             } catch (err) {
-                console.error("Erro na autenticação silenciosa:", err);
+                console.error("Erro na autenticação:", err);
+                if (err.code === 'auth/operation-not-allowed') {
+                    alert("Erro: Precisa de ativar o provedor de login 'Anonymous' (Anónimo) na Consola do Firebase!");
+                }
             }
 
             onAuthStateChanged(auth, (user) => {
@@ -208,7 +249,6 @@
             });
         }
 
-        // Atualiza a lista de clientes no Filtro (Dropdown)
         function updateClientDropdown() {
             const currentSelection = clientFilter.value;
             const clientes = [...new Set(currentData.map(item => item.cliente))].sort();
@@ -223,7 +263,6 @@
             clientFilter.value = currentSelection;
         }
 
-        // === NOVAS FUNÇÕES: ATUALIZAR DATA E EXCLUIR (COM MODAL) ===
         window.updateDate = async (smsId, novaData) => {
             if (!currentUser) return;
             try {
@@ -258,9 +297,7 @@
             }
         };
 
-        // Configuração e Função da IA (Gemini)
-        const apiKey = "";
-        
+        // === Função da IA (Gemini) ===
         async function fetchWithBackoff(url, options, retries = 5) {
             const delays = [1000, 2000, 4000, 8000, 16000];
             for (let i = 0; i < retries; i++) {
@@ -278,10 +315,15 @@
         window.generateAISummary = async (smsId) => {
             if (!currentUser) return;
             
+            // Verifica se a API Key do Gemini foi preenchida (para o Vercel)
+            if (apiKey === "" && typeof __firebase_config === 'undefined') {
+                alert("Para usar a IA no Vercel, precisa adicionar a sua API Key do Google Gemini no código (linha ~159).");
+                return;
+            }
+            
             const item = currentData.find(i => i.sms === smsId);
             if (!item || !item.descricao) return;
 
-            // Mostra o feedback visual
             loaderText.textContent = "A IA está a analisar o pedido...";
             loader.style.display = 'flex';
 
@@ -309,16 +351,14 @@
                 }
             } catch (err) {
                 console.error("Erro Gemini:", err);
-                // Substituição do alert() bloqueado por um feedback visual não-intrusivo
-                loaderText.textContent = "Erro ao gerar resumo. Tente novamente.";
+                loaderText.textContent = "Erro ao gerar resumo. Verifique a sua API Key.";
                 setTimeout(() => {
                     loader.style.display = 'none';
                     loaderText.textContent = "A processar...";
-                }, 2500);
+                }, 3000);
             }
         };
 
-        // Função de categorização automática
         function categorizar(texto) {
             const t = texto.toLowerCase();
             if (t.includes('contrato') || t.includes('juridico') || t.includes('alçada') || t.includes('legal')) return 'Jurídico';
@@ -329,7 +369,6 @@
             return 'ERP';
         }
 
-        // Upload de novos ficheiros TXT
         async function uploadData(dataArray) {
             if (!currentUser) return;
             loader.style.display = 'flex';
@@ -337,7 +376,6 @@
             try {
                 for (const item of dataArray) {
                     const docRef = doc(db, 'artifacts', appId, 'public', 'data', 'sms_list', item.sms);
-                    // Usamos setDoc com {merge: true} para não apagar a data de previsão se a SMS já existir
                     await setDoc(docRef, item, { merge: true });
                 }
             } catch (err) {
@@ -385,17 +423,14 @@
             const searchTerm = searchInput.value.toLowerCase();
             const clientTerm = clientFilter.value;
 
-            // Filtro por Aba
             let filtered = activeTab !== 'Todos' 
                 ? currentData.filter(i => i.modulo === activeTab) 
                 : currentData;
 
-            // Filtro por Cliente (Dropdown)
             if (clientTerm) {
                 filtered = filtered.filter(i => i.cliente === clientTerm);
             }
 
-            // Filtro por Texto Livre
             if (searchTerm) {
                 filtered = filtered.filter(i => 
                     i.cliente.toLowerCase().includes(searchTerm) ||
