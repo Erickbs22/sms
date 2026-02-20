@@ -597,7 +597,7 @@ Forneça a sua resposta EXATAMENTE no seguinte formato Markdown:
 
             // NOVO SISTEMA EM LOTES (SEM LIMITE MÁXIMO DE SMS)
             // Divide as SMS em pacotes para não estoirar os limites de memória da API
-            const BATCH_SIZE = 50; 
+            const BATCH_SIZE = 25; 
             const totalBatches = Math.ceil(smsDaAbaTotal.length / BATCH_SIZE);
             let finalAiResponse = "";
 
@@ -876,3 +876,4 @@ ${smsListText}`;
     </script>
 </body>
 </html>
+
