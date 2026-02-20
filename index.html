@@ -60,9 +60,53 @@
         </div>
     </div>
 
+    <!-- Modal de Erro de Permissões (Regras Firestore) -->
+    <div id="permissionsErrorModal" class="hidden fixed inset-0 bg-slate-900 bg-opacity-80 z-[4000] flex items-center justify-center p-4">
+        <div class="bg-white rounded-2xl shadow-2xl p-6 md:p-8 max-w-2xl w-full mx-auto max-h-[90vh] overflow-y-auto custom-scroll">
+            <div class="flex items-center gap-3 mb-4 text-amber-600">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                </svg>
+                <h2 class="text-2xl font-bold text-slate-800">Atenção: Acesso Negado no Firebase!</h2>
+            </div>
+            <p class="text-slate-600 mb-4 text-sm leading-relaxed">
+                O erro <strong>"Missing or insufficient permissions"</strong> que viu na consola significa que a aplicação conseguiu encontrar o seu projeto, mas <strong>o seu próprio Firebase está a bloquear a entrada</strong> por segurança.
+            </p>
+            <p class="text-slate-600 mb-4 text-sm leading-relaxed">
+                Enquanto não corrigir as regras, a aplicação irá funcionar em <strong>Modo Local</strong> (os dados não vão para a nuvem). Para ativar a nuvem, siga estes passos:
+            </p>
+            
+            <ol class="list-decimal list-inside text-sm text-slate-700 space-y-2 mb-4 ml-2 font-medium">
+                <li>Aceda ao <a href="https://console.firebase.google.com/" target="_blank" class="text-blue-600 underline">Console do Firebase</a>.</li>
+                <li>Vá a <strong>Firestore Database</strong> > aba <strong>Regras (Rules)</strong>.</li>
+                <li>Substitua o código existente por este e clique em <strong>Publicar</strong>:</li>
+            </ol>
+
+            <div class="relative mb-6">
+                <pre class="bg-slate-800 text-green-400 p-4 rounded-xl text-xs sm:text-sm font-mono overflow-x-auto"><code>rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    match /{document=**} {
+      allow read, write: if true;
+    }
+  }
+}</code></pre>
+            </div>
+
+            <div class="flex flex-col sm:flex-row justify-end gap-3 mt-6 border-t pt-6 border-slate-200">
+                <button onclick="document.getElementById('permissionsErrorModal').classList.add('hidden')" class="w-full sm:w-auto px-6 py-3 text-slate-600 hover:bg-slate-100 font-bold rounded-xl transition-colors text-sm">
+                    Continuar em Modo Local
+                </button>
+                <button onclick="window.location.reload()" class="w-full sm:w-auto bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-6 rounded-xl transition-all shadow-lg text-sm">
+                    Já atualizei as Regras!
+                </button>
+            </div>
+        </div>
+    </div>
+
     <!-- Modal de Confirmação de Exclusão -->
-    <div id="deleteModal" class="hidden fixed inset-0 bg-slate-900 bg-opacity-50 z-[2000] flex items-center justify-center">
-        <div class="bg-white rounded-xl shadow-2xl p-6 max-w-sm w-full mx-4">
+    <div id="deleteModal" class="hidden fixed inset-0 bg-slate-900 bg-opacity-50 z-[2000] flex items-center justify-center p-4">
+        <div class="bg-white rounded-xl shadow-2xl p-6 max-w-sm w-full mx-auto">
             <div class="flex items-center gap-3 mb-4 text-red-600">
                 <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
@@ -82,11 +126,17 @@
             <div>
                 <h1 class="text-3xl font-extrabold text-slate-800 tracking-tight">Painel de SMS Estruturado</h1>
                 <p class="text-slate-500 mt-1">Gestão de demandas, previsões e estado.</p>
+                <span id="localModeWarning" class="hidden mt-2 inline-flex items-center gap-1 px-3 py-1 rounded-full bg-amber-100 text-amber-700 text-xs font-bold">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd" /></svg>
+                    Modo Local: Regras do Firebase não configuradas. Os dados não serão salvos na nuvem.
+                </span>
             </div>
             
-            <div class="flex items-center gap-3 bg-white p-3 rounded-xl shadow-sm border border-slate-200">
-                <label class="text-sm font-medium text-slate-600">Subir novo ficheiro TXT:</label>
-                <input type="file" id="fileInput" accept=".txt" class="text-sm text-slate-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100 cursor-pointer">
+            <div class="flex items-center gap-3">
+                <div class="flex items-center gap-3 bg-white p-3 rounded-xl shadow-sm border border-slate-200">
+                    <label class="text-sm font-medium text-slate-600">Subir novo ficheiro TXT:</label>
+                    <input type="file" id="fileInput" accept=".txt" class="text-sm text-slate-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100 cursor-pointer">
+                </div>
             </div>
         </header>
 
@@ -146,73 +196,40 @@
     <!-- Firebase SDK -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-        import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getAuth, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
         import { getFirestore, collection, doc, setDoc, onSnapshot, updateDoc, deleteDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
-        // ============================================================================
-        // === 1. CONFIGURAÇÃO DE PRODUÇÃO (PARA VERCEL)                            ===
-        // ============================================================================
-        // Se estiver a hospedar no Vercel, preencha os dados do SEU projeto Firebase aqui:
-        const myFirebaseConfig = {
-            apiKey: "AIzaSyCkOgR1EAAyVTshmYHV5_L6vjaXpbEFKe0",
-            authDomain: "sms-s-cdbfc.firebaseapp.com",
-            projectId: "SEU_PROJETO",
-            storageBucket: "SEU_PROJETO.firebasestorage.app",
-            messagingSenderId: "SENDER_ID",
-            appId: "APP_ID"
-        };
-        const myAppId = "meu-painel-sms-producao";
-
-        // Chave do Google Gemini (necessária para a IA funcionar no Vercel)
-        // Obtenha uma em: https://aistudio.google.com/
-        const apiKey = "AIzaSyC7aKk1Eeqs17H1bUbkcRjEytC1p0GQeaM"; 
-        // ============================================================================
-
-        // === VARIÁVEIS DE ESTADO ===
+        // === VARIÁVEIS DE ESTADO E CONFIGURAÇÃO ===
         let db, auth, currentUser;
         let currentData = [];
         let activeTab = 'Todos';
         let pendingDeleteId = null;
+        let isLocalMode = false;
+        let unsubscribeSnapshot = null;
 
-        // === LÓGICA DE AMBIENTE HÍBRIDO (CANVAS VS VERCEL) ===
-        let firebaseConfig = myFirebaseConfig;
-        let appId = myAppId;
+        // Configuração Hardcoded 
+        const firebaseConfig = {
+            apiKey: "AIzaSyCkOgR1EAAyVTshmYHV5_L6vjaXpbEFKe0",
+            authDomain: "sms-s-cdbfc.firebaseapp.com",
+            projectId: "sms-s-cdbfc",
+            storageBucket: "sms-s-cdbfc.firebasestorage.app",
+            messagingSenderId: "935866993596",
+            appId: "1:935866993596:web:db9a107d6f4911de6339b9",
+            measurementId: "G-V0Z5M1CH35"
+        };
+        
+        const appIdString = firebaseConfig.projectId;
 
-        try {
-            // Se estiver no ambiente do Canvas, sobrepõe com a config de teste invisível
-            if (typeof __firebase_config !== 'undefined') {
-                firebaseConfig = JSON.parse(__firebase_config);
-                appId = typeof __app_id !== 'undefined' ? __app_id : myAppId;
-            }
-        } catch (e) {
-            console.log("A executar fora do Canvas. A usar a configuração manual.");
-        }
-
+        // === INICIALIZAÇÃO DA APP ===
         async function initFirebase() {
-            // Verifica se a configuração foi preenchida
-            if (firebaseConfig.apiKey === "SUA_API_KEY" && typeof __firebase_config === 'undefined') {
-                alert("ATENÇÃO: Está a correr a aplicação no Vercel, mas não preencheu as credenciais do Firebase no código (linha ~150). A aplicação não vai funcionar até que as preencha.");
-                return;
-            }
-
             const app = initializeApp(firebaseConfig);
             auth = getAuth(app);
             db = getFirestore(app);
 
             try {
-                // Tenta autenticação do Canvas
-                if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
-                    await signInWithCustomToken(auth, __initial_auth_token);
-                } else {
-                    // Para Vercel: Autenticação Anónima
-                    // IMPORTANTE: Deve ativar o "Anonymous" na aba Authentication da sua consola Firebase!
-                    await signInAnonymously(auth);
-                }
+                await signInAnonymously(auth);
             } catch (err) {
                 console.error("Erro na autenticação:", err);
-                if (err.code === 'auth/operation-not-allowed') {
-                    alert("Erro: Precisa de ativar o provedor de login 'Anonymous' (Anónimo) na Consola do Firebase!");
-                }
             }
 
             onAuthStateChanged(auth, (user) => {
@@ -222,6 +239,7 @@
                 }
             });
         }
+        
         initFirebase();
 
         // === UI References ===
@@ -233,19 +251,50 @@
         const fileInput = document.getElementById('fileInput');
         const loader = document.getElementById('loader');
         const loaderText = document.getElementById('loaderText');
+        const permissionsErrorModal = document.getElementById('permissionsErrorModal');
+
+        function enableLocalMode() {
+            isLocalMode = true;
+            document.getElementById('localModeWarning').classList.remove('hidden');
+            
+            // Carrega dados locais se existirem
+            const saved = localStorage.getItem('sms_local_data');
+            if(saved) currentData = JSON.parse(saved);
+            
+            updateClientDropdown();
+            renderTable();
+        }
+
+        function saveLocalData() {
+            if(isLocalMode) {
+                localStorage.setItem('sms_local_data', JSON.stringify(currentData));
+            }
+        }
 
         // === FUNÇÕES DE DADOS E SINCRONIZAÇÃO ===
         function syncData() {
-            if (!currentUser) return;
+            if (!currentUser || isLocalMode) return;
             
-            const colRef = collection(db, 'artifacts', appId, 'public', 'data', 'sms_list');
+            const colRef = collection(db, 'artifacts', appIdString, 'public', 'data', 'sms_list');
             
-            onSnapshot(colRef, (snapshot) => {
+            unsubscribeSnapshot = onSnapshot(colRef, (snapshot) => {
                 currentData = snapshot.docs.map(doc => doc.data());
                 updateClientDropdown();
                 renderTable();
             }, (error) => {
                 console.error("Erro ao ler dados:", error);
+                
+                // Se as regras de segurança bloquearem o acesso:
+                if(error.code === 'permission-denied' || error.message.includes('Missing or insufficient permissions')) {
+                   loader.style.display = 'none';
+                   permissionsErrorModal.classList.remove('hidden');
+                   
+                   // Para de tentar forçar a leitura bloqueada
+                   if(unsubscribeSnapshot) unsubscribeSnapshot(); 
+                   
+                   // Ativa imediatamente o Modo Local para a app não "quebrar"
+                   enableLocalMode();
+                }
             });
         }
 
@@ -264,12 +313,21 @@
         }
 
         window.updateDate = async (smsId, novaData) => {
+            if (isLocalMode) {
+                const item = currentData.find(i => i.sms === smsId);
+                if (item) item.previsao = novaData;
+                saveLocalData();
+                renderTable();
+                return;
+            }
+
             if (!currentUser) return;
             try {
-                const docRef = doc(db, 'artifacts', appId, 'public', 'data', 'sms_list', smsId);
+                const docRef = doc(db, 'artifacts', appIdString, 'public', 'data', 'sms_list', smsId);
                 await updateDoc(docRef, { previsao: novaData });
             } catch (err) {
                 console.error("Erro ao atualizar data:", err);
+                if(err.code === 'permission-denied') permissionsErrorModal.classList.remove('hidden');
             }
         };
 
@@ -285,15 +343,25 @@
         };
 
         window.confirmDelete = async () => {
-            if (!currentUser || !pendingDeleteId) return;
-            
+            if (!pendingDeleteId) return;
+
+            if (isLocalMode) {
+                currentData = currentData.filter(i => i.sms !== pendingDeleteId);
+                saveLocalData();
+                closeDeleteModal();
+                renderTable();
+                return;
+            }
+
+            if (!currentUser) return;
             try {
-                const docRef = doc(db, 'artifacts', appId, 'public', 'data', 'sms_list', pendingDeleteId);
+                const docRef = doc(db, 'artifacts', appIdString, 'public', 'data', 'sms_list', pendingDeleteId);
                 await deleteDoc(docRef);
                 closeDeleteModal();
             } catch (err) {
                 console.error("Erro ao excluir SMS:", err);
                 closeDeleteModal();
+                if(err.code === 'permission-denied') permissionsErrorModal.classList.remove('hidden');
             }
         };
 
@@ -313,12 +381,13 @@
         }
 
         window.generateAISummary = async (smsId) => {
-            if (!currentUser) return;
+            if (!currentUser && !isLocalMode) return;
             
-            // Verifica se a API Key do Gemini foi preenchida (para o Vercel)
-            if (apiKey === "" && typeof __firebase_config === 'undefined') {
-                alert("Para usar a IA no Vercel, precisa adicionar a sua API Key do Google Gemini no código (linha ~159).");
-                return;
+            let gmKey = localStorage.getItem('my_sms_gemini_key');
+            if (!gmKey) {
+                gmKey = window.prompt("Por favor, insira a sua API Key do Google Gemini para utilizar a funcionalidade de resumo (ela ficará guardada no navegador):");
+                if (!gmKey) return; 
+                localStorage.setItem('my_sms_gemini_key', gmKey.trim());
             }
             
             const item = currentData.find(i => i.sms === smsId);
@@ -331,7 +400,7 @@
 
             try {
                 const result = await fetchWithBackoff(
-                    `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${apiKey}`,
+                    `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${gmKey}`,
                     {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
@@ -344,14 +413,21 @@
                 const aiSummary = result.candidates?.[0]?.content?.parts?.[0]?.text?.trim();
 
                 if (aiSummary) {
-                    const docRef = doc(db, 'artifacts', appId, 'public', 'data', 'sms_list', smsId);
-                    await updateDoc(docRef, { resumo: `✨ IA: ${aiSummary}` });
+                    if (isLocalMode) {
+                        item.resumo = `✨ IA: ${aiSummary}`;
+                        saveLocalData();
+                        renderTable();
+                    } else {
+                        const docRef = doc(db, 'artifacts', appIdString, 'public', 'data', 'sms_list', smsId);
+                        await updateDoc(docRef, { resumo: `✨ IA: ${aiSummary}` });
+                    }
                     loader.style.display = 'none';
                     loaderText.textContent = "A processar...";
                 }
             } catch (err) {
                 console.error("Erro Gemini:", err);
                 loaderText.textContent = "Erro ao gerar resumo. Verifique a sua API Key.";
+                localStorage.removeItem('my_sms_gemini_key'); 
                 setTimeout(() => {
                     loader.style.display = 'none';
                     loaderText.textContent = "A processar...";
@@ -370,16 +446,40 @@
         }
 
         async function uploadData(dataArray) {
-            if (!currentUser) return;
             loader.style.display = 'flex';
+            
+            if (isLocalMode) {
+                dataArray.forEach(newItem => {
+                    const index = currentData.findIndex(i => i.sms === newItem.sms);
+                    if(index > -1) {
+                        // Preserva a previsão existente no modo local
+                        const oldPrevisao = currentData[index].previsao;
+                        currentData[index] = { ...currentData[index], ...newItem };
+                        if(oldPrevisao) currentData[index].previsao = oldPrevisao;
+                    } else {
+                        currentData.push(newItem);
+                    }
+                });
+                saveLocalData();
+                updateClientDropdown();
+                renderTable();
+                loader.style.display = 'none';
+                return;
+            }
+
+            if (!currentUser) {
+                loader.style.display = 'none';
+                return;
+            }
             
             try {
                 for (const item of dataArray) {
-                    const docRef = doc(db, 'artifacts', appId, 'public', 'data', 'sms_list', item.sms);
+                    const docRef = doc(db, 'artifacts', appIdString, 'public', 'data', 'sms_list', item.sms);
                     await setDoc(docRef, item, { merge: true });
                 }
             } catch (err) {
                 console.error("Erro ao salvar:", err);
+                if(err.code === 'permission-denied') permissionsErrorModal.classList.remove('hidden');
             } finally {
                 loader.style.display = 'none';
             }
@@ -506,4 +606,3 @@
     </script>
 </body>
 </html>
-
