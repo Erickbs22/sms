@@ -416,7 +416,11 @@ service cloud.firestore {
         };
 
         // === Função da IA (Gemini) ===
-        const apiKey = ""; // O ambiente fornece a chave automaticamente em tempo de execução
+        
+async function getGeminiKey() {
+            // Substitua "COLE_SEU_TOKEN_AQUI" pela sua chave real do Google AI Studio
+            return "COLE_SEU_TOKEN_AQUI"; 
+        }
         
         async function fetchWithBackoff(url, options, retries = 5) {
             const delays = [1000, 2000, 4000, 8000, 16000];
@@ -435,6 +439,9 @@ service cloud.firestore {
         window.generateAISummary = async (smsId) => {
             if (!currentUser && !isLocalMode) return;
             
+            const apiKey = await getGeminiKey();
+            if (apiKey === null) return;
+
             const item = currentData.find(i => i.sms === smsId);
             if (!item || !item.descricao) return;
 
@@ -469,7 +476,12 @@ service cloud.firestore {
                 }
             } catch (err) {
                 console.error("Erro Gemini:", err);
-                alert("Erro ao gerar resumo. Não foi possível comunicar com a IA.");
+                if (err.message.includes('400') || err.message.includes('403')) {
+                    localStorage.removeItem('my_sms_gemini_key');
+                    alert("A sua API Key parece ser inválida ou não tem permissões. Foi removida. Tente novamente.");
+                } else {
+                    alert("Erro ao gerar resumo. Não foi possível comunicar com a IA.");
+                }
             } finally {
                 loader.style.display = 'none';
                 loaderText.textContent = "A processar...";
@@ -496,6 +508,9 @@ service cloud.firestore {
         window.generateActionPlan = async (smsId) => {
             if (!currentUser && !isLocalMode) return;
             
+            const apiKey = await getGeminiKey();
+            if (apiKey === null) return;
+
             const item = currentData.find(i => i.sms === smsId);
             if (!item || !item.descricao) return;
 
@@ -541,7 +556,12 @@ Forneça a sua resposta EXATAMENTE no seguinte formato Markdown:
                 }
             } catch (err) {
                 console.error("Erro Gemini:", err);
-                alert("Erro ao gerar plano de ação. Não foi possível comunicar com a IA.");
+                if (err.message.includes('400') || err.message.includes('403')) {
+                    localStorage.removeItem('my_sms_gemini_key');
+                    alert("A sua API Key parece ser inválida. Foi removida. Tente novamente.");
+                } else {
+                    alert("Erro ao gerar plano de ação. Não foi possível comunicar com a IA.");
+                }
             } finally {
                 loader.style.display = 'none';
                 loaderText.textContent = "A processar...";
@@ -556,13 +576,15 @@ Forneça a sua resposta EXATAMENTE no seguinte formato Markdown:
                 return;
             }
 
-            // Filtrar apenas os dados da aba atual selecionada
             const smsDaAba = currentData.filter(i => i.modulo === activeTab);
 
             if (smsDaAba.length === 0) {
                 alert(`Não existem SMS na aba ${activeTab} para analisar. Suba um ficheiro primeiro.`);
                 return;
             }
+
+            const apiKey = await getGeminiKey();
+            if (apiKey === null) return;
 
             loaderText.textContent = `A IA está a analisar as ${smsDaAba.length} SMS(s) da aba ${activeTab}...`;
             loader.style.display = 'flex';
@@ -610,7 +632,12 @@ ${smsListText}`;
                 }
             } catch (err) {
                 console.error("Erro Gemini:", err);
-                alert("Ocorreu um erro ao comunicar com a IA. Pode estar a tentar analisar demasiados SMS em simultâneo.");
+                if (err.message.includes('400') || err.message.includes('403')) {
+                    localStorage.removeItem('my_sms_gemini_key');
+                    alert("A sua API Key parece ser inválida. Foi removida. Tente novamente.");
+                } else {
+                    alert("Ocorreu um erro ao comunicar com a IA. Pode estar a tentar analisar demasiados SMS em simultâneo.");
+                }
             } finally {
                 loader.style.display = 'none';
                 loaderText.textContent = "A processar...";
