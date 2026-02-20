@@ -418,20 +418,7 @@ service cloud.firestore {
         // === Função da IA (Gemini) ===
         
         async function getGeminiKey() {
-            let isCanvas = false;
-            try { if (typeof __app_id !== 'undefined') isCanvas = true; } catch(e) {}
-            
-            // Se estivermos dentro do ambiente de testes inicial, a chave é gerida internamente
-            if (isCanvas) return ""; 
-            
-            // Fora do ambiente de testes (ex: Vercel), pede e guarda a chave no navegador
-            let key = localStorage.getItem('my_sms_gemini_key');
-            if (!key) {
-                key = window.prompt("Para utilizar a IA no Vercel (ou noutro domínio externo), introduza a sua API Key do Google Gemini Studio:");
-                if (!key) return null; // Utilizador cancelou
-                localStorage.setItem('my_sms_gemini_key', key.trim());
-            }
-            return key.trim();
+            return "AIzaSyC7aKk1Eeqs17H1bUbkcRjEytC1p0GQeaM";
         }
         
         async function fetchWithBackoff(url, options, retries = 5) {
@@ -520,7 +507,7 @@ service cloud.firestore {
         window.generateActionPlan = async (smsId) => {
             if (!currentUser && !isLocalMode) return;
             
-            const apiKey = await getGeminiKey(AIzaSyC7aKk1Eeqs17H1bUbkcRjEytC1p0GQeaM);
+            const apiKey = await getGeminiKey();
             if (apiKey === null) return;
 
             const item = currentData.find(i => i.sms === smsId);
