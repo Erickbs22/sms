@@ -133,7 +133,7 @@ service cloud.firestore {
                     <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
                 </button>
             </div>
-            <div class="text-slate-500 mb-6 text-sm border-b pb-4">Agrupamento inteligente dos SMS exclusivos da aba atual baseando-se no contexto das descrições.</div>
+            <div id="similarityDescText" class="text-slate-500 mb-6 text-sm border-b pb-4">Agrupamento inteligente dos SMS exclusivos da aba atual baseando-se no contexto das descrições.</div>
             <div id="similarityContent" class="overflow-y-auto custom-scroll flex-1 bg-slate-50 p-6 rounded-xl border border-slate-200 text-sm text-slate-700 whitespace-pre-wrap leading-relaxed shadow-inner">
                 <!-- Conteúdo gerado pela IA aparecerá aqui -->
             </div>
@@ -421,8 +421,8 @@ service cloud.firestore {
             return "AIzaSyC7aKk1Eeqs17H1bUbkcRjEytC1p0GQeaM";
         }
         
-        async function fetchWithBackoff(url, options, retries = 5) {
-            const delays = [1000, 2000, 4000, 8000, 16000];
+        async function fetchWithBackoff(url, options, retries = 3) {
+            const delays = [1000, 2000, 4000]; // Reduzido para evitar longas demoras
             for (let i = 0; i < retries; i++) {
                 try {
                     const response = await fetch(url, options);
@@ -447,7 +447,10 @@ service cloud.firestore {
             loaderText.textContent = "A IA está a analisar o pedido...";
             loader.style.display = 'flex';
 
-            const prompt = `Você é um especialista em suporte de TI e sistemas corporativos. Leia a descrição técnica a seguir e crie um resumo ultra-curto, direto e muito claro (de 5 a 12 palavras no máximo) informando qual é o problema ou a solicitação principal:\n\nDescrição: ${item.descricao}`;
+            // Limitamos a descrição a 2000 caracteres para evitar ultrapassar limites
+            const safeDesc = item.descricao.length > 2000 ? item.descricao.substring(0, 2000) + "... [truncado]" : item.descricao;
+
+            const prompt = `Você é um especialista em suporte de TI e sistemas corporativos. Leia a descrição técnica a seguir e crie um resumo ultra-curto, direto e muito claro (de 5 a 12 palavras no máximo) informando qual é o problema ou a solicitação principal:\n\nDescrição: ${safeDesc}`;
 
             try {
                 const result = await fetchWithBackoff(
@@ -476,10 +479,11 @@ service cloud.firestore {
             } catch (err) {
                 console.error("Erro Gemini:", err);
                 if (err.message.includes('400') || err.message.includes('403')) {
-                    localStorage.removeItem('my_sms_gemini_key');
-                    alert("A sua API Key parece ser inválida ou não tem permissões. Foi removida. Tente novamente.");
+                    alert("A sua API Key do Gemini parece ser inválida ou não tem permissões.");
+                } else if (err.message.includes('429')) {
+                    alert("Limite de utilização da API atingido. Aguarde um minuto e tente de novo.");
                 } else {
-                    alert("Erro ao gerar resumo. Não foi possível comunicar com a IA.");
+                    alert(`Falha na IA (${err.message}). O texto pode ser demasiado longo.`);
                 }
             } finally {
                 loader.style.display = 'none';
@@ -516,8 +520,11 @@ service cloud.firestore {
             loaderText.textContent = "✨ A criar plano de ação e resposta...";
             loader.style.display = 'flex';
 
+            // Limitar também para o plano de ação
+            const safeDesc = item.descricao.length > 2500 ? item.descricao.substring(0, 2500) + "... [truncado]" : item.descricao;
+
             const prompt = `Atue como um Engenheiro de Suporte de TI Sénior. Analise o seguinte chamado do cliente '${item.cliente}':
-Descrição: ${item.descricao}
+Descrição: ${safeDesc}
 
 Forneça a sua resposta EXATAMENTE no seguinte formato Markdown:
 
@@ -556,10 +563,11 @@ Forneça a sua resposta EXATAMENTE no seguinte formato Markdown:
             } catch (err) {
                 console.error("Erro Gemini:", err);
                 if (err.message.includes('400') || err.message.includes('403')) {
-                    localStorage.removeItem('my_sms_gemini_key');
-                    alert("A sua API Key parece ser inválida. Foi removida. Tente novamente.");
+                    alert("A sua API Key parece ser inválida ou estar bloqueada.");
+                } else if (err.message.includes('429')) {
+                    alert("Muitos pedidos enviados à IA ao mesmo tempo. Por favor, aguarde um bocado.");
                 } else {
-                    alert("Erro ao gerar plano de ação. Não foi possível comunicar com a IA.");
+                    alert(`Falha na IA (${err.message}). O texto pode ser demasiado pesado para ser processado.`);
                 }
             } finally {
                 loader.style.display = 'none';
@@ -575,9 +583,9 @@ Forneça a sua resposta EXATAMENTE no seguinte formato Markdown:
                 return;
             }
 
-            const smsDaAba = currentData.filter(i => i.modulo === activeTab);
+            const smsDaAbaTotal = currentData.filter(i => i.modulo === activeTab);
 
-            if (smsDaAba.length === 0) {
+            if (smsDaAbaTotal.length === 0) {
                 alert(`Não existem SMS na aba ${activeTab} para analisar. Suba um ficheiro primeiro.`);
                 return;
             }
@@ -585,61 +593,85 @@ Forneça a sua resposta EXATAMENTE no seguinte formato Markdown:
             const apiKey = await getGeminiKey();
             if (apiKey === null) return;
 
-            loaderText.textContent = `A IA está a analisar as ${smsDaAba.length} SMS(s) da aba ${activeTab}...`;
             loader.style.display = 'flex';
 
-            let smsListText = `\n\n=== MÓDULO/PRODUTO: ${activeTab.toUpperCase()} ===\n`;
-            smsListText += smsDaAba.map(i => `[SMS: ${i.sms} | Cliente: ${i.cliente}]\nDescrição: ${i.descricao}`).join("\n\n---\n\n");
-            
-            const prompt = `Atue como um Especialista em Suporte de TI e Análise de Requisitos de Software.
-Abaixo estão os SMS referentes exclusivamente ao módulo/produto '${activeTab}'.
+            // NOVO SISTEMA EM LOTES (SEM LIMITE MÁXIMO DE SMS)
+            // Divide as SMS em pacotes para não estoirar os limites de memória da API
+            const BATCH_SIZE = 50; 
+            const totalBatches = Math.ceil(smsDaAbaTotal.length / BATCH_SIZE);
+            let finalAiResponse = "";
+
+            for (let currentBatch = 0; currentBatch < totalBatches; currentBatch++) {
+                loaderText.textContent = `A analisar SMS da aba ${activeTab} (Lote ${currentBatch + 1} de ${totalBatches})... Isto pode demorar.`;
+
+                const batchData = smsDaAbaTotal.slice(currentBatch * BATCH_SIZE, (currentBatch + 1) * BATCH_SIZE);
+                
+                let smsListText = `\n\n=== MÓDULO/PRODUTO: ${activeTab.toUpperCase()} (PARTE ${currentBatch + 1} de ${totalBatches}) ===\n`;
+                smsListText += batchData.map(i => {
+                    // Limitamos levemente a descrição individual para evitar falhas de tamanho, mas enviamos TODAS as SMS
+                    const descSegura = i.descricao.length > 1500 
+                        ? i.descricao.substring(0, 1500) + "... [texto longo truncado]" 
+                        : i.descricao;
+                    return `[SMS: ${i.sms} | Cliente: ${i.cliente}]\nDescrição: ${descSegura}`;
+                }).join("\n\n---\n\n");
+                
+                const prompt = `Atue como um Especialista em Suporte de TI e Análise de Requisitos de Software.
+Abaixo estão as SMS referentes ao módulo/produto '${activeTab}'.
 A sua tarefa é ler este grupo e procurar similaridades, agrupando as SMS por temas, funcionalidades ou problemas recorrentes.
 
 Regras OBRIGATÓRIAS:
-1. Comece com um cabeçalho '## Resumo Analítico - ${activeTab}'.
+1. Comece com um cabeçalho '## Resumo Analítico - ${activeTab} (Lote ${currentBatch + 1})'.
 2. Crie subgrupos por Temas de similaridade (ex: '### Lentidão no Sistema', '### Dúvidas Financeiras').
 3. Forneça uma breve explicação de 1 a 2 linhas sobre o que aquele tema aborda.
 4. Liste os números de SMS exatos que pertencem a esse grupo e o respetivo Cliente afetado.
 5. Formate a resposta usando Markdown de forma limpa, fácil de ler e muito profissional.
 
-Aqui estão os dados:
+Aqui estão os dados deste lote:
 ${smsListText}`;
 
-            try {
-                const result = await fetchWithBackoff(
-                    `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${apiKey}`,
-                    {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({
-                            contents: [{ parts: [{ text: prompt }] }]
-                        })
+                try {
+                    const result = await fetchWithBackoff(
+                        `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${apiKey}`,
+                        {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({
+                                contents: [{ parts: [{ text: prompt }] }]
+                            })
+                        }
+                    );
+
+                    let responseText = result.candidates?.[0]?.content?.parts?.[0]?.text?.trim();
+                    if (responseText) {
+                        finalAiResponse += responseText + "\n\n<hr class='my-8 border-slate-300'>\n\n";
                     }
-                );
-
-                let aiResponse = result.candidates?.[0]?.content?.parts?.[0]?.text?.trim();
-
-                if (aiResponse) {
-                    aiResponse = aiResponse.replace(/\*\*(.*?)\*\*/g, '<strong class="text-slate-900">$1</strong>');
-                    aiResponse = aiResponse.replace(/\*(.*?)\*/g, '<em class="text-slate-800">$1</em>');
-                    aiResponse = aiResponse.replace(/### (.*?)\n/g, '<h3 class="text-lg font-bold text-slate-800 mt-5 mb-2 border-b pb-1">$1</h3>\n');
-                    aiResponse = aiResponse.replace(/## (.*?)\n/g, '<h2 class="text-xl font-extrabold text-indigo-700 mt-6 mb-3 bg-indigo-50 px-3 py-2 rounded-lg inline-block">$1</h2>\n');
-                    aiResponse = aiResponse.replace(/\n\n/g, '<br><br>');
-                    
-                    document.getElementById('similarityContent').innerHTML = aiResponse;
-                    openSimilarityModal();
+                } catch (err) {
+                    console.error("Erro Gemini Lote", currentBatch, err);
+                    finalAiResponse += `\n\n**[Aviso: Falha técnica ao analisar o Lote ${currentBatch + 1}. A API rejeitou o pedido.]**\n\n`;
                 }
-            } catch (err) {
-                console.error("Erro Gemini:", err);
-                if (err.message.includes('400') || err.message.includes('403')) {
-                    localStorage.removeItem('my_sms_gemini_key');
-                    alert("A sua API Key parece ser inválida. Foi removida. Tente novamente.");
-                } else {
-                    alert("Ocorreu um erro ao comunicar com a IA. Pode estar a tentar analisar demasiados SMS em simultâneo.");
+
+                // Pausa de 3 segundos entre chamadas para não sofrer bloqueio de Taxa de Requisição (Erro 429) do Google
+                if (currentBatch < totalBatches - 1) {
+                    loaderText.textContent = `A processar... aguardando intervalo de segurança da API...`;
+                    await new Promise(res => setTimeout(res, 3000));
                 }
-            } finally {
-                loader.style.display = 'none';
-                loaderText.textContent = "A processar...";
+            }
+
+            loader.style.display = 'none';
+
+            if (finalAiResponse) {
+                let htmlFormat = finalAiResponse;
+                htmlFormat = htmlFormat.replace(/\*\*(.*?)\*\*/g, '<strong class="text-slate-900">$1</strong>');
+                htmlFormat = htmlFormat.replace(/\*(.*?)\*/g, '<em class="text-slate-800">$1</em>');
+                htmlFormat = htmlFormat.replace(/### (.*?)\n/g, '<h3 class="text-lg font-bold text-slate-800 mt-5 mb-2 border-b pb-1">$1</h3>\n');
+                htmlFormat = htmlFormat.replace(/## (.*?)\n/g, '<h2 class="text-xl font-extrabold text-indigo-700 mt-6 mb-3 bg-indigo-50 px-3 py-2 rounded-lg inline-block">$1</h2>\n');
+                htmlFormat = htmlFormat.replace(/\n\n/g, '<br><br>');
+                
+                document.getElementById('similarityDescText').innerHTML = `Agrupamento de <strong>todas as ${smsDaAbaTotal.length} SMS</strong> da aba selecionada, processadas e combinadas a partir de ${totalBatches} lote(s).`;
+                document.getElementById('similarityContent').innerHTML = htmlFormat;
+                openSimilarityModal();
+            } else {
+                alert("Não foi possível gerar a análise completa. Verifique a sua ligação ou os limites da sua API Key.");
             }
         };
 
