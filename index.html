@@ -143,7 +143,7 @@ service cloud.firestore {
 
     <!-- Modal de Análise de Similaridade -->
     <div id="similarityModal" class="hidden fixed inset-0 bg-slate-900 bg-opacity-50 z-[2000] flex items-center justify-center p-4">
-        <div class="bg-white rounded-xl shadow-2xl p-6 md:p-8 max-w-4xl w-full mx-auto max-h-[90vh] flex flex-col">
+        <div class="bg-white rounded-xl shadow-2xl p-6 md:p-8 max-w-5xl w-full mx-auto max-h-[90vh] flex flex-col">
             <div class="flex items-center justify-between mb-2">
                 <div class="flex items-center gap-3 text-indigo-600">
                     <span class="text-3xl">✨</span>
@@ -153,7 +153,7 @@ service cloud.firestore {
                     <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
                 </button>
             </div>
-            <div id="similarityDescText" class="text-slate-500 mb-6 text-sm border-b pb-4">Agrupamento inteligente dos SMS exclusivos da aba atual baseando-se no contexto das descrições.</div>
+            <div id="similarityDescText" class="text-slate-500 mb-6 text-sm border-b pb-4">Agrupamento inteligente dos SMS baseando-se no contexto das descrições.</div>
             <div id="similarityContent" class="overflow-y-auto custom-scroll flex-1 bg-slate-50 p-6 rounded-xl border border-slate-200 text-sm text-slate-700 whitespace-pre-wrap leading-relaxed shadow-inner">
                 <!-- Conteúdo gerado pela IA aparecerá aqui -->
             </div>
@@ -162,11 +162,51 @@ service cloud.firestore {
                     <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M3 17a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm3.293-7.707a1 1 0 011.414 0L9 10.586V3a1 1 0 112 0v7.586l1.293-1.293a1 1 0 111.414 1.414l-3 3a1 1 0 01-1.414 0l-3-3a1 1 0 010-1.414z" clip-rule="evenodd" /></svg>
                     Exportar
                 </button>
-                <!-- Removida a classe flex temporariamente para o sistema de classes não o revelar sem querer -->
                 <button id="btnConsolidar" onclick="consolidateAnalysis()" title="Juntar temas repetidos de lotes diferentes" class="hidden items-center gap-2 px-5 py-3 bg-fuchsia-600 hover:bg-fuchsia-700 text-white text-sm font-bold rounded-xl transition-colors shadow-md">
                     <span class="text-xl">🪄</span> Consolidar Lotes
                 </button>
-                <button onclick="closeSimilarityModal()" class="px-6 py-3 bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-bold rounded-xl transition-colors shadow-md">Fechar Relatório</button>
+                <button id="btnSaveAnalysis" onclick="saveAnalysisAndMark()" title="Guardar histórico e marcar SMS como lidas" class="flex items-center gap-2 px-5 py-3 bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-bold rounded-xl transition-colors shadow-md">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd" /></svg>
+                    Guardar & Marcar SMS
+                </button>
+                <button onclick="closeSimilarityModal()" class="px-6 py-3 bg-slate-800 hover:bg-slate-900 text-white text-sm font-bold rounded-xl transition-colors shadow-md">Fechar</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal de Histórico de Análises -->
+    <div id="historyModal" class="hidden fixed inset-0 bg-slate-900 bg-opacity-70 z-[3000] flex items-center justify-center p-4">
+        <div class="bg-white rounded-xl shadow-2xl w-full max-w-4xl mx-auto h-[85vh] flex flex-col overflow-hidden">
+            <div class="p-6 border-b border-slate-200 flex items-center justify-between bg-slate-50">
+                <div class="flex items-center gap-3 text-slate-800">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                    <h3 class="text-xl font-bold">Histórico de Análises</h3>
+                </div>
+                <button onclick="closeHistoryModal()" class="text-slate-400 hover:text-slate-600 transition-colors">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                </button>
+            </div>
+            
+            <div class="flex-1 flex overflow-hidden">
+                <!-- Lista lateral de análises -->
+                <div class="w-1/3 border-r border-slate-200 bg-white overflow-y-auto custom-scroll p-4 space-y-2" id="historyListContainer">
+                    <!-- Preenchido via JS -->
+                </div>
+                
+                <!-- Visualização do conteúdo da análise -->
+                <div class="w-2/3 bg-slate-50 p-6 overflow-y-auto custom-scroll">
+                    <div id="historyContentArea" class="text-sm text-slate-700 whitespace-pre-wrap leading-relaxed hidden">
+                        <!-- Conteúdo Markdown convertido para HTML entra aqui -->
+                    </div>
+                    <div id="historyEmptyState" class="h-full flex flex-col items-center justify-center text-slate-400">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-16 w-16 mb-4 opacity-50" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                        </svg>
+                        <p>Selecione uma análise ao lado para visualizar.</p>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
@@ -196,7 +236,7 @@ service cloud.firestore {
     <div class="w-full max-w-[98%] 2xl:max-w-[1900px] mx-auto">
         <header class="mb-8 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
             <div>
-                <h1 class="text-3xl font-extrabold text-slate-800 tracking-tight">Painel de SMS Estruturado</h1>
+                <h1 class="text-3xl font-extrabold text-slate-800 tracking-tight">Painel de SMS Cloud</h1>
                 <p class="text-slate-500 mt-1">Gestão de demandas, previsões e estado.</p>
                 <span id="localModeWarning" class="hidden mt-2 inline-flex items-center gap-1 px-3 py-1 rounded-full bg-amber-100 text-amber-700 text-xs font-bold">
                     <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd" /></svg>
@@ -205,9 +245,15 @@ service cloud.firestore {
             </div>
             
             <div class="flex items-center gap-3">
-                <div class="flex items-center gap-3 bg-white p-3 rounded-xl shadow-sm border border-slate-200">
-                    <label id="uploadLabel" class="text-sm font-medium text-slate-600">Subir ficheiro (Auto-categorizado):</label>
-                    <input type="file" id="fileInput" accept=".txt" class="text-sm text-slate-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100 cursor-pointer">
+                <button onclick="openHistoryModal()" class="bg-white hover:bg-slate-50 text-slate-700 border border-slate-200 px-4 py-2 rounded-xl shadow-sm text-sm font-bold flex items-center gap-2 transition-colors">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                    Histórico de Análises
+                </button>
+                <div class="flex items-center gap-3 bg-white p-2 md:p-3 rounded-xl shadow-sm border border-slate-200">
+                    <label id="uploadLabel" class="text-sm font-medium text-slate-600 hidden md:block">Subir ficheiro (Auto-categorizado):</label>
+                    <input type="file" id="fileInput" accept=".txt" class="text-sm text-slate-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100 cursor-pointer w-48 md:w-auto">
                 </div>
             </div>
         </header>
@@ -223,7 +269,7 @@ service cloud.firestore {
         </div>
 
         <!-- Filtros e Estatísticas -->
-        <div class="grid grid-cols-1 md:grid-cols-7 gap-4 mb-6">
+        <div class="grid grid-cols-1 md:grid-cols-8 gap-4 mb-6">
             <div class="md:col-span-2">
                 <input type="text" id="searchInput" placeholder="Pesquisar termo ou SMS..." 
                        class="w-full h-full px-5 py-3 border border-slate-300 rounded-xl shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all">
@@ -234,25 +280,31 @@ service cloud.firestore {
                     <!-- Preenchido via JS -->
                 </select>
             </div>
+            <div class="md:col-span-1 flex items-center justify-center bg-white border border-slate-300 rounded-xl shadow-sm px-3">
+                <label class="flex items-center gap-2 cursor-pointer text-sm font-medium text-slate-600">
+                    <input type="checkbox" id="hideAnalyzedCheckbox" class="w-5 h-5 text-blue-600 rounded focus:ring-blue-500 cursor-pointer" onchange="renderTable()">
+                    Ocultar Analisadas
+                </label>
+            </div>
             <div class="md:col-span-1">
-                <button id="btnAnalyzeThemes" onclick="analyzeSimilarities()" title="Ler SMS desta aba e agrupar por temas" class="hidden w-full h-full bg-indigo-50 hover:bg-indigo-100 text-indigo-700 border border-indigo-200 px-4 py-2 rounded-xl shadow-sm font-bold flex-col items-center justify-center transition-all group">
+                <button id="btnAnalyzeThemes" onclick="analyzeSimilarities()" title="Ler SMS não analisadas desta aba" class="hidden w-full h-full bg-indigo-50 hover:bg-indigo-100 text-indigo-700 border border-indigo-200 px-2 py-2 rounded-xl shadow-sm font-bold flex-col items-center justify-center transition-all group">
                     <span class="text-xl group-hover:scale-110 transition-transform">✨</span>
                     <span class="text-[10px] uppercase tracking-wider mt-1 text-center">Analisar Aba</span>
                 </button>
             </div>
             <div class="md:col-span-1">
-                <button id="btnDeleteAllTab" onclick="openDeleteAllModal()" title="Apagar todas as SMS desta aba" class="hidden w-full h-full bg-red-50 hover:bg-red-100 text-red-700 border border-red-200 px-4 py-2 rounded-xl shadow-sm font-bold flex-col items-center justify-center transition-all group">
+                <button id="btnDeleteAllTab" onclick="openDeleteAllModal()" title="Apagar todas as SMS desta aba" class="hidden w-full h-full bg-red-50 hover:bg-red-100 text-red-700 border border-red-200 px-2 py-2 rounded-xl shadow-sm font-bold flex-col items-center justify-center transition-all group">
                     <span class="text-xl group-hover:scale-110 transition-transform">🗑️</span>
                     <span class="text-[10px] uppercase tracking-wider mt-1 text-center">Apagar Aba</span>
                 </button>
             </div>
-            <div class="bg-white px-5 py-3 rounded-xl shadow-sm border border-slate-200 flex flex-col justify-center items-center md:col-span-1">
-                <span class="text-xs text-slate-400 uppercase font-bold tracking-wider text-center">Registos Ativos</span>
+            <div class="bg-white px-2 py-3 rounded-xl shadow-sm border border-slate-200 flex flex-col justify-center items-center md:col-span-1">
+                <span class="text-[10px] text-slate-400 uppercase font-bold tracking-wider text-center">Registos</span>
                 <span id="rowCount" class="text-2xl font-bold text-blue-600">0</span>
             </div>
         </div>
 
-        <!-- Tabela Restabelecida -->
+        <!-- Tabela -->
         <div class="bg-white rounded-2xl shadow-xl overflow-hidden border border-slate-200">
             <div class="overflow-x-auto">
                 <table class="w-full text-left border-collapse">
@@ -272,7 +324,7 @@ service cloud.firestore {
             </div>
             <div id="noResults" class="hidden p-16 text-center">
                 <p class="text-slate-400 text-lg">Nenhum registo encontrado nesta visualização.</p>
-                <p class="text-slate-400 text-sm mt-2">Altere os filtros ou suba um novo ficheiro .txt</p>
+                <p class="text-slate-400 text-sm mt-2">Altere os filtros, ajuste a opção "Ocultar Analisadas" ou suba um novo ficheiro.</p>
             </div>
         </div>
     </div>
@@ -286,11 +338,15 @@ service cloud.firestore {
         // === VARIÁVEIS DE ESTADO E CONFIGURAÇÃO ===
         let db, auth, currentUser;
         let currentData = [];
+        let savedAnalyses = []; // Guarda o histórico de análises do firebase
         let activeTab = 'Todos';
         let pendingDeleteId = null;
         let isLocalMode = false;
         let unsubscribeSnapshot = null;
-        let rawAnalysisResult = ""; // Guarda o texto bruto da análise para a consolidação e exportação
+        let unsubscribeAnalysesSnapshot = null;
+        
+        let rawAnalysisResult = ""; // Guarda o texto bruto da análise atual
+        let analyzedSmsIdsCache = []; // Lista temporária de IDs para marcar como lidas após guardar análise
 
         // Configuração Hardcoded 
         const firebaseConfig = {
@@ -321,6 +377,7 @@ service cloud.firestore {
                 if (user) {
                     currentUser = user;
                     syncData();
+                    syncAnalyses();
                 }
             });
         }
@@ -337,6 +394,7 @@ service cloud.firestore {
         const loader = document.getElementById('loader');
         const loaderText = document.getElementById('loaderText');
         const permissionsErrorModal = document.getElementById('permissionsErrorModal');
+        const hideAnalyzedCheckbox = document.getElementById('hideAnalyzedCheckbox');
 
         window.enableLocalMode = () => {
             isLocalMode = true;
@@ -345,6 +403,9 @@ service cloud.firestore {
             // Carrega dados locais se existirem
             const saved = localStorage.getItem('sms_local_data');
             if(saved) currentData = JSON.parse(saved);
+            
+            const savedAn = localStorage.getItem('sms_local_analyses');
+            if(savedAn) savedAnalyses = JSON.parse(savedAn);
             
             updateClientDropdown();
             renderTable();
@@ -369,17 +430,24 @@ service cloud.firestore {
             }, (error) => {
                 console.error("Erro ao ler dados:", error);
                 
-                // Se as regras de segurança bloquearem o acesso:
                 if(error.code === 'permission-denied' || error.message.includes('Missing or insufficient permissions')) {
                    loader.style.display = 'none';
                    permissionsErrorModal.classList.remove('hidden');
-                   
-                   // Para de tentar forçar a leitura bloqueada
                    if(unsubscribeSnapshot) unsubscribeSnapshot(); 
-                   
-                   // Ativa imediatamente o Modo Local para a app não "quebrar"
                    enableLocalMode();
                 }
+            });
+        }
+
+        function syncAnalyses() {
+            if (!currentUser || isLocalMode) return;
+            
+            const colRefAnalyses = collection(db, 'artifacts', appIdString, 'public', 'data', 'sms_analyses');
+            
+            unsubscribeAnalysesSnapshot = onSnapshot(colRefAnalyses, (snapshot) => {
+                savedAnalyses = snapshot.docs.map(doc => doc.data());
+            }, (error) => {
+                console.error("Erro ao ler histórico de análises:", error);
             });
         }
 
@@ -499,7 +567,6 @@ service cloud.firestore {
             }
 
             try {
-                // Apaga em blocos grandes para não sobrecarregar o Firebase ou o navegador
                 const batchSize = 100;
                 for (let i = 0; i < smsToDelete.length; i += batchSize) {
                     const chunk = smsToDelete.slice(i, i + batchSize);
@@ -516,10 +583,94 @@ service cloud.firestore {
             }
         };
 
+        // === Histórico de Análises ===
+        window.openHistoryModal = () => {
+            renderHistoryList();
+            document.getElementById('historyContentArea').classList.add('hidden');
+            document.getElementById('historyEmptyState').classList.remove('hidden');
+            document.getElementById('historyModal').classList.remove('hidden');
+        };
+
+        window.closeHistoryModal = () => {
+            document.getElementById('historyModal').classList.add('hidden');
+        };
+
+        function renderHistoryList() {
+            const container = document.getElementById('historyListContainer');
+            container.innerHTML = '';
+
+            if (savedAnalyses.length === 0) {
+                container.innerHTML = `<p class="text-slate-500 text-sm text-center p-4">Nenhum histórico guardado.</p>`;
+                return;
+            }
+
+            // Ordenar do mais recente para o mais antigo
+            const sortedAnalyses = [...savedAnalyses].sort((a, b) => new Date(b.data) - new Date(a.data));
+
+            sortedAnalyses.forEach(analysis => {
+                const dataFormatada = new Date(analysis.data).toLocaleString();
+                const div = document.createElement('div');
+                div.className = "p-3 border border-slate-200 rounded-lg hover:bg-blue-50 cursor-pointer transition-colors";
+                div.onclick = () => showHistoryContent(analysis);
+                
+                div.innerHTML = `
+                    <div class="flex items-center justify-between mb-1">
+                        <span class="text-xs font-bold text-indigo-700 bg-indigo-100 px-2 py-0.5 rounded uppercase">${analysis.modulo}</span>
+                        <span class="text-[10px] text-slate-400">${dataFormatada.split(',')[0]}</span>
+                    </div>
+                    <p class="text-xs text-slate-600 truncate">Gerada em: ${dataFormatada}</p>
+                `;
+                container.appendChild(div);
+            });
+        }
+
+        function showHistoryContent(analysis) {
+            document.getElementById('historyEmptyState').classList.add('hidden');
+            const contentArea = document.getElementById('historyContentArea');
+            contentArea.classList.remove('hidden');
+
+            let htmlFormat = analysis.conteudo;
+            htmlFormat = htmlFormat.replace(/\*\*(.*?)\*\*/g, '<strong class="text-slate-900">$1</strong>');
+            htmlFormat = htmlFormat.replace(/\*(.*?)\*/g, '<em class="text-slate-800">$1</em>');
+            htmlFormat = htmlFormat.replace(/### (.*?)(?:\n|$)/g, '<h3 class="text-lg font-bold text-slate-800 mt-5 mb-2 border-b pb-1">$1</h3>\n');
+            htmlFormat = htmlFormat.replace(/## (.*?)(?:\n|$)/g, '<h2 class="text-xl font-extrabold text-indigo-700 mt-6 mb-3 bg-indigo-50 px-3 py-2 rounded-lg inline-block">$1</h2>\n');
+            htmlFormat = htmlFormat.replace(/\n\n/g, '<br><br>');
+
+            contentArea.innerHTML = `
+                <div class="flex justify-between items-center mb-6 pb-4 border-b border-slate-200">
+                    <div>
+                        <h2 class="text-2xl font-bold text-slate-800">Análise: ${analysis.modulo}</h2>
+                        <p class="text-xs text-slate-500 mt-1">Data de gravação: ${new Date(analysis.data).toLocaleString()}</p>
+                    </div>
+                    <button onclick="downloadSpecificAnalysis('${analysis.id}')" class="text-slate-500 hover:text-blue-600 flex flex-col items-center">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" /></svg>
+                        <span class="text-[10px] uppercase font-bold mt-1">Baixar</span>
+                    </button>
+                </div>
+                ${htmlFormat}
+            `;
+        }
+
+        window.downloadSpecificAnalysis = (id) => {
+            const analysis = savedAnalyses.find(a => a.id === id);
+            if(!analysis) return;
+            
+            const exportText = `# Relatório de Análise - ${analysis.modulo.toUpperCase()}\nGerado em: ${new Date(analysis.data).toLocaleString()}\n\n` + analysis.conteudo;
+            const blob = new Blob([exportText], { type: "text/markdown;charset=utf-8" });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `Analise_${analysis.modulo}_${analysis.id}.md`; 
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+        };
+
+
         // === Função da IA (Gemini) ===
         
         async function getGeminiKey() {
-            // Se houver uma chave válida local armazenada, retorna ela
             let key = localStorage.getItem('my_sms_gemini_key');
             if (key) return key.trim();
 
@@ -533,7 +684,6 @@ service cloud.firestore {
             return key.trim();
         }
         
-        // Função para limpar caracteres que quebram a API
         function sanitizeText(str) {
             if (!str) return "";
             return str.replace(/[\x00-\x08\x0B\x0C\x0E-\x1F\x7F-\x9F]/g, "").trim();
@@ -546,7 +696,6 @@ service cloud.firestore {
             { category: "HARM_CATEGORY_DANGEROUS_CONTENT", threshold: "BLOCK_ONLY_HIGH" }
         ];
         
-        // Backoff reforçado: Retenta se falhar por limite de pedidos (429) OU erros internos da API (500, 503)
         async function fetchWithBackoff(url, options, retries = 5) {
             const delays = [2000, 5000, 10000, 15000, 25000];
             for (let i = 0; i <= retries; i++) {
@@ -556,19 +705,15 @@ service cloud.firestore {
 
                     if (!response.ok) {
                         const errMsg = data?.error?.message || `Status HTTP ${response.status}`;
-                        // Força o erro a entrar no bloco catch abaixo para avaliação
                         throw new Error(`${response.status} - ${errMsg}`);
                     }
                     return data;
                 } catch (err) {
-                    // Verifica se é uma falha recuperável
                     const isTransient = err.message.includes('429') || err.message.includes('500') || err.message.includes('503') || err.message.includes('Failed to fetch');
                     
-                    // Se não for um erro recuperável (ex: 400 Bad Request, 401 Unauthorized, 403 API Key Leak) OU se esgotou as tentativas, desiste.
                     if (i === retries || (!isTransient && !err.message.includes('401'))) {
                         throw err; 
                     }
-                    // Trata erro 401 limpando a chave para pedir nova na próxima vez e parando o backoff para não travar
                     if(err.message.includes('401')){
                         localStorage.removeItem('my_sms_gemini_key');
                         throw new Error("Chave de API inválida ou não autorizada (401). A sua chave foi removida. Por favor, gere uma nova.");
@@ -612,9 +757,7 @@ service cloud.firestore {
                 );
 
                 const candidate = result.candidates?.[0];
-                if (!candidate) {
-                    throw new Error(`A Google bloqueou a resposta. Motivo: ${result.promptFeedback?.blockReason || 'Desconhecido'}`);
-                }
+                if (!candidate) throw new Error(`A Google bloqueou a resposta. Motivo: ${result.promptFeedback?.blockReason || 'Desconhecido'}`);
 
                 const aiSummary = candidate.content?.parts?.[0]?.text?.trim();
 
@@ -640,18 +783,6 @@ service cloud.firestore {
                 loader.style.display = 'none';
                 loaderText.textContent = "A processar...";
             }
-        };
-
-        // === Análise de Similaridades por Tema ===
-        window.openSimilarityModal = () => {
-            document.getElementById('similarityModal').classList.remove('hidden');
-        };
-
-        window.closeSimilarityModal = () => {
-            document.getElementById('similarityModal').classList.add('hidden');
-            // Restabelece as classes do botão de consolidar quando o modal é fechado
-            document.getElementById('btnConsolidar').classList.add('hidden');
-            document.getElementById('btnConsolidar').classList.remove('flex');
         };
 
         window.openActionPlanModal = () => {
@@ -714,7 +845,6 @@ Forneça a sua resposta EXATAMENTE no seguinte formato Markdown:
                 if (aiResponse) {
                     aiResponse = aiResponse.replace(/\*\*(.*?)\*\*/g, '<strong class="text-slate-900">$1</strong>');
                     aiResponse = aiResponse.replace(/\*(.*?)\*/g, '<em class="text-slate-800">$1</em>');
-                    // Expressões regulares ajustadas para apanhar bem os parágrafos em vários formatos
                     aiResponse = aiResponse.replace(/### (.*?)(?:\n|$)/g, '<h3 class="text-lg font-bold text-slate-800 mt-5 mb-2 border-b pb-1">$1</h3>\n');
                     aiResponse = aiResponse.replace(/## (.*?)(?:\n|$)/g, '<h2 class="text-lg font-extrabold text-emerald-700 mt-5 mb-2 bg-emerald-50 px-3 py-1.5 rounded inline-block">$1</h2>\n');
                     aiResponse = aiResponse.replace(/\n\n/g, '<br><br>');
@@ -736,6 +866,23 @@ Forneça a sua resposta EXATAMENTE no seguinte formato Markdown:
             }
         };
 
+        // === Análise de Similaridades e Guardar Histórico ===
+        window.openSimilarityModal = () => {
+            document.getElementById('similarityModal').classList.remove('hidden');
+        };
+
+        window.closeSimilarityModal = () => {
+            document.getElementById('similarityModal').classList.add('hidden');
+            const btnConsolidar = document.getElementById('btnConsolidar');
+            btnConsolidar.classList.add('hidden');
+            btnConsolidar.classList.remove('flex');
+            
+            // Restaura o botão caso tenha sofrido erro visual
+            btnConsolidar.innerHTML = `<span class="text-xl">🪄</span> Consolidar Lotes`;
+            btnConsolidar.disabled = false;
+            btnConsolidar.classList.remove('opacity-75', 'cursor-wait');
+        };
+
         window.analyzeSimilarities = async () => {
             if (!currentUser && !isLocalMode) return;
             
@@ -744,10 +891,16 @@ Forneça a sua resposta EXATAMENTE no seguinte formato Markdown:
                 return;
             }
 
-            const smsDaAbaTotal = currentData.filter(i => i.modulo === activeTab);
+            const hideAnalyzed = document.getElementById('hideAnalyzedCheckbox').checked;
+            
+            // Pega os SMS da aba atual. Se o filtro estiver ativo, ignora as que já foram analisadas.
+            let smsDaAbaTotal = currentData.filter(i => i.modulo === activeTab);
+            if (hideAnalyzed) {
+                smsDaAbaTotal = smsDaAbaTotal.filter(i => !i.analisada);
+            }
 
             if (smsDaAbaTotal.length === 0) {
-                alert(`Não existem SMS na aba ${activeTab} para analisar. Suba um ficheiro primeiro.`);
+                alert(`Não existem SMS pendentes na aba ${activeTab} para analisar.`);
                 return;
             }
 
@@ -756,9 +909,11 @@ Forneça a sua resposta EXATAMENTE no seguinte formato Markdown:
             
             const modelName = (!apiKey || apiKey === "") ? "gemini-2.5-flash-preview-09-2025" : "gemini-2.5-flash";
 
+            // Guardamos na memória os IDs que estão prestes a ser enviados à IA.
+            analyzedSmsIdsCache = smsDaAbaTotal.map(i => i.sms);
+
             loader.style.display = 'flex';
 
-            // SISTEMA EM LOTES OTIMIZADO PARA API PAGA
             const BATCH_SIZE = 50; 
             const totalBatches = Math.ceil(smsDaAbaTotal.length / BATCH_SIZE);
             let finalAiResponse = "";
@@ -817,7 +972,7 @@ ${smsListText}`;
                     finalAiResponse += `\n\n**[Aviso: Falha ao analisar o Lote ${currentBatch + 1}. Erro devolvido: ${err.message}]**\n\n`;
                     
                     if (err.message.includes('403') || err.message.includes('leaked') || err.message.includes('401')) {
-                        break; // Pára de tentar os outros lotes se a chave foi bloqueada
+                        break;
                     }
                 }
 
@@ -835,7 +990,7 @@ ${smsListText}`;
             }
 
             if (finalAiResponse && finalAiResponse.length > 50) {
-                rawAnalysisResult = finalAiResponse; // Salva o texto Markdown puro gerado
+                rawAnalysisResult = finalAiResponse; 
                 
                 let htmlFormat = finalAiResponse;
                 htmlFormat = htmlFormat.replace(/\*\*(.*?)\*\*/g, '<strong class="text-slate-900">$1</strong>');
@@ -853,10 +1008,9 @@ ${smsListText}`;
                 document.getElementById('similarityContent').innerHTML = warningHTML + htmlFormat;
                 
                 const btnConsolidar = document.getElementById('btnConsolidar');
-                // Exibe o botão de Consolidar apenas se a análise precisou de ser dividida em lotes
                 if (totalBatches > 1 && !houveErroLote) {
                     btnConsolidar.classList.remove('hidden');
-                    btnConsolidar.classList.add('flex'); // Força a exibição
+                    btnConsolidar.classList.add('flex'); 
                 } else {
                     btnConsolidar.classList.add('hidden');
                     btnConsolidar.classList.remove('flex');
@@ -868,7 +1022,6 @@ ${smsListText}`;
             }
         };
 
-        // Nova Função: Segunda passagem da IA para fundir lotes
         window.consolidateAnalysis = async () => {
             if (!rawAnalysisResult) return;
 
@@ -876,7 +1029,6 @@ ${smsListText}`;
             if (apiKey === null) return;
             const modelName = (!apiKey || apiKey === "") ? "gemini-2.5-flash-preview-09-2025" : "gemini-2.5-flash";
 
-            // FEEDBACK VISUAL DIRETO NO MODAL E NO BOTÃO
             const btnConsolidar = document.getElementById('btnConsolidar');
             const originalBtnHTML = btnConsolidar.innerHTML;
             btnConsolidar.innerHTML = `<svg class="animate-spin h-5 w-5 mr-2" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg> A processar...`;
@@ -920,7 +1072,7 @@ ${rawAnalysisResult}`;
                 let finalConsolidated = candidate.content?.parts?.[0]?.text?.trim();
                 
                 if (finalConsolidated) {
-                    rawAnalysisResult = finalConsolidated; // Substitui o cru pelo novo texto consolidado para caso o utilizador exporte a seguir
+                    rawAnalysisResult = finalConsolidated; 
 
                     let htmlFormat = finalConsolidated;
                     htmlFormat = htmlFormat.replace(/\*\*(.*?)\*\*/g, '<strong class="text-slate-900">$1</strong>');
@@ -932,7 +1084,6 @@ ${rawAnalysisResult}`;
                     document.getElementById('similarityDescText').innerHTML = `Relatório <strong>Consolidado</strong>. Todos os temas repetidos que estavam espalhados por vários lotes foram unidos com sucesso.`;
                     contentArea.innerHTML = htmlFormat;
                     
-                    // Esconde o botão após consolidar para não deixar o utilizador clicar duas vezes
                     btnConsolidar.classList.add('hidden');
                     btnConsolidar.classList.remove('flex');
                 }
@@ -940,7 +1091,6 @@ ${rawAnalysisResult}`;
                 console.error("Erro na consolidação:", err);
                 alert(`Erro ao tentar consolidar o relatório: ${err.message}`);
                 
-                // Em caso de erro, restaura o botão e o texto antigo para que o utilizador possa tentar novamente
                 btnConsolidar.innerHTML = originalBtnHTML;
                 btnConsolidar.disabled = false;
                 btnConsolidar.classList.remove('opacity-75', 'cursor-wait');
@@ -955,25 +1105,74 @@ ${rawAnalysisResult}`;
             }
         };
 
-        // Nova Função: Exportar em ficheiro Markdown (Texto)
+        // Nova Função: Guardar Análise no Firebase e Marcar SMS
+        window.saveAnalysisAndMark = async () => {
+            if (!rawAnalysisResult) return;
+            
+            loaderText.textContent = "A guardar análise e a marcar SMS...";
+            loader.style.display = 'flex';
+
+            try {
+                const analysisId = 'analise_' + Date.now();
+                const analysisObj = {
+                    id: analysisId,
+                    modulo: activeTab,
+                    conteudo: rawAnalysisResult,
+                    data: new Date().toISOString()
+                };
+
+                // 1. Grava o relatório de análise
+                if (isLocalMode) {
+                    savedAnalyses.push(analysisObj);
+                    localStorage.setItem('sms_local_analyses', JSON.stringify(savedAnalyses));
+                } else if (currentUser) {
+                    await setDoc(doc(db, 'artifacts', appIdString, 'public', 'data', 'sms_analyses', analysisId), analysisObj);
+                }
+
+                // 2. Marca todas as SMS que acabaram de ser enviadas à IA como "Analisadas"
+                if (isLocalMode) {
+                    analyzedSmsIdsCache.forEach(id => {
+                        let idx = currentData.findIndex(i => i.sms === id);
+                        if (idx > -1) currentData[idx].analisada = true;
+                    });
+                    saveLocalData();
+                    renderTable();
+                } else if (currentUser) {
+                    // Update em lotes para evitar sobrecarga no Firebase
+                    const batchSize = 100;
+                    for (let i = 0; i < analyzedSmsIdsCache.length; i += batchSize) {
+                        const chunk = analyzedSmsIdsCache.slice(i, i + batchSize);
+                        await Promise.all(chunk.map(id => {
+                            const docRef = doc(db, 'artifacts', appIdString, 'public', 'data', 'sms_list', id);
+                            return updateDoc(docRef, { analisada: true });
+                        }));
+                    }
+                }
+
+                alert("A análise foi guardada no Histórico! As SMS lidas foram agora marcadas como Analisadas.");
+                closeSimilarityModal();
+            } catch (error) {
+                console.error("Erro ao guardar análise:", error);
+                alert("Ocorreu um erro ao guardar a análise no banco de dados.");
+            } finally {
+                loader.style.display = 'none';
+                loaderText.textContent = "A processar...";
+            }
+        };
+
         window.exportAnalysis = () => {
             if (!rawAnalysisResult) {
                 alert("Não há dados para exportar. Gere uma análise primeiro.");
                 return;
             }
             
-            // Adiciona um título amigável ao topo do ficheiro
             const exportText = `# Relatório de Análise de Padrões SMS - ${activeTab.toUpperCase()}\nGerado em: ${new Date().toLocaleString()}\n\n` + rawAnalysisResult;
-            
-            // Cria um ficheiro virtual e força o download
             const blob = new Blob([exportText], { type: "text/markdown;charset=utf-8" });
             const url = URL.createObjectURL(blob);
             const a = document.createElement('a');
             a.href = url;
-            
             const dateStr = new Date().toISOString().split('T')[0];
-            a.download = `Analise_${activeTab}_${dateStr}.md`; // Formato MarkDown
-            
+            a.download = `Analise_${activeTab}_${dateStr}.md`; 
             document.body.appendChild(a);
             a.click();
             document.body.removeChild(a);
@@ -987,7 +1186,7 @@ ${rawAnalysisResult}`;
             if (t.includes('funcionario') || t.includes('folha') || t.includes('ponto') || t.includes('rh') || t.includes('beneficio')) return 'RH';
             if (t.includes('entrega') || t.includes('estoque') || t.includes('logistica') || t.includes('transporte')) return 'Logística';
             if (t.includes('medico') || t.includes('paciente') || t.includes('prontuario') || t.includes('saude') || t.includes('hospit')) return 'Saúde';
-            return 'ERP'; // Padrão
+            return 'ERP';
         }
 
         async function uploadData(dataArray) {
@@ -998,8 +1197,10 @@ ${rawAnalysisResult}`;
                     const index = currentData.findIndex(i => i.sms === newItem.sms);
                     if(index > -1) {
                         const oldPrevisao = currentData[index].previsao;
+                        const oldAnalisada = currentData[index].analisada;
                         currentData[index] = { ...currentData[index], ...newItem };
                         if(oldPrevisao) currentData[index].previsao = oldPrevisao;
+                        if(oldAnalisada) currentData[index].analisada = oldAnalisada;
                     } else {
                         currentData.push(newItem);
                     }
@@ -1030,26 +1231,17 @@ ${rawAnalysisResult}`;
         }
 
         function parseText(text, currentTab) {
-            // Remove o cabeçalho se ele existir
             let cleanText = text.replace(/^CLIENTE¬SMS¬DESCRICAO¬RESUMO¬\r?\n?/, '');
-            
-            // O separador nativo do ficheiro que forneceu é o '¬'
             const parts = cleanText.split('¬');
             const dataArray = [];
             
-            // Processa as colunas de 4 em 4
             for (let i = 0; i < parts.length - 3; i += 4) {
                 const c = parts[i]?.trim();
                 const s = parts[i+1]?.trim();
                 const d = parts[i+2]?.trim();
                 const r = parts[i+3]?.trim();
                 
-                // Validação de segurança: 
-                // O campo SMS deve existir, ter menos de 50 caracteres e não deve conter barras '/'
-                // Isto previne falhas no Firestore em caso de desalinhamento de linhas.
                 if (c && s && s.length < 50 && !s.includes('/')) {
-                    
-                    // LÓGICA DE ABA: Se não estiver em "Todos", força o módulo da aba. Se estiver, auto-categoriza.
                     const calculadoModulo = (currentTab !== 'Todos') ? currentTab : categorizar(d + " " + r);
                     
                     dataArray.push({
@@ -1058,7 +1250,8 @@ ${rawAnalysisResult}`;
                         descricao: d,
                         resumo: r,
                         modulo: calculadoModulo,
-                        timestamp: Date.now()
+                        timestamp: Date.now(),
+                        analisada: false // SMS novas não foram analisadas
                     });
                 }
             }
@@ -1099,12 +1292,13 @@ ${rawAnalysisResult}`;
         };
 
         function renderTable() {
-            if (!tableBody) return; // Segurança extra
+            if (!tableBody) return;
 
             tableBody.innerHTML = '';
             
             const searchTerm = searchInput.value.toLowerCase();
             const clientTerm = clientFilter.value;
+            const hideAnalyzed = hideAnalyzedCheckbox.checked;
 
             let filtered = activeTab !== 'Todos' 
                 ? currentData.filter(i => i.modulo === activeTab) 
@@ -1122,6 +1316,10 @@ ${rawAnalysisResult}`;
                     i.resumo.toLowerCase().includes(searchTerm)
                 );
             }
+            
+            if (hideAnalyzed) {
+                filtered = filtered.filter(i => !i.analisada);
+            }
 
             rowCount.textContent = filtered.length;
 
@@ -1135,12 +1333,20 @@ ${rawAnalysisResult}`;
                     tr.className = "hover:bg-slate-50 transition-colors";
                     
                     const dataPrevisao = item.previsao ? item.previsao : '';
+                    
+                    // Identificador visual de estado da SMS
+                    const statusBadge = item.analisada 
+                        ? `<span class="text-[9px] px-1.5 py-0.5 rounded bg-green-100 text-green-700 font-bold uppercase tracking-wider ml-2 border border-green-200" title="Esta SMS já fez parte de uma Análise de Temas.">✓ Analisada</span>` 
+                        : '';
 
                     tr.innerHTML = `
                         <td class="px-5 py-4 text-sm font-bold text-slate-700 align-top">${item.cliente}</td>
                         <td class="px-5 py-4 text-sm align-top">
                             <span class="sms-badge">${item.sms}</span>
-                            <div class="mt-2"><span class="text-[10px] px-2 py-0.5 rounded bg-slate-200 text-slate-600 font-bold uppercase tracking-wider">${item.modulo}</span></div>
+                            <div class="mt-2 flex items-center">
+                                <span class="text-[10px] px-2 py-0.5 rounded bg-slate-200 text-slate-600 font-bold uppercase tracking-wider">${item.modulo}</span>
+                                ${statusBadge}
+                            </div>
                         </td>
                         <td class="px-5 py-4 align-top">
                             <div class="text-sm font-semibold text-slate-800 mb-1">${item.resumo}</div>
