@@ -29,7 +29,7 @@
             position: fixed;
             top: 0; left: 0; width: 100%; height: 100%;
             background: rgba(255, 255, 255, 0.8);
-            z-index: 1000;
+            z-index: 9999;
             align-items: center;
             justify-content: center;
         }
@@ -162,7 +162,8 @@ service cloud.firestore {
                     <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M3 17a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm3.293-7.707a1 1 0 011.414 0L9 10.586V3a1 1 0 112 0v7.586l1.293-1.293a1 1 0 111.414 1.414l-3 3a1 1 0 01-1.414 0l-3-3a1 1 0 010-1.414z" clip-rule="evenodd" /></svg>
                     Exportar
                 </button>
-                <button id="btnConsolidar" onclick="consolidateAnalysis()" title="Juntar temas repetidos de lotes diferentes" class="hidden px-5 py-3 bg-fuchsia-600 hover:bg-fuchsia-700 text-white text-sm font-bold rounded-xl transition-colors shadow-md flex items-center gap-2">
+                <!-- Removida a classe flex temporariamente para o sistema de classes não o revelar sem querer -->
+                <button id="btnConsolidar" onclick="consolidateAnalysis()" title="Juntar temas repetidos de lotes diferentes" class="hidden items-center gap-2 px-5 py-3 bg-fuchsia-600 hover:bg-fuchsia-700 text-white text-sm font-bold rounded-xl transition-colors shadow-md">
                     <span class="text-xl">🪄</span> Consolidar Lotes
                 </button>
                 <button onclick="closeSimilarityModal()" class="px-6 py-3 bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-bold rounded-xl transition-colors shadow-md">Fechar Relatório</button>
@@ -518,22 +519,17 @@ service cloud.firestore {
         // === Função da IA (Gemini) ===
         
         async function getGeminiKey() {
-            // ATENÇÃO: Nunca partilhe a sua API Key publicamente. A anterior foi bloqueada pelo Google por vazamento.
-            // Para maior segurança, voltamos a utilizar o método de pedir a chave e guardar apenas no seu navegador local.
-            const hardcodedKey = ""; // Se quiser arriscar de novo, cole aqui. Mas não partilhe o código!
-            
-            if (hardcodedKey && hardcodedKey !== "") return hardcodedKey;
+            // Se houver uma chave válida local armazenada, retorna ela
+            let key = localStorage.getItem('my_sms_gemini_key');
+            if (key) return key.trim();
 
             let isCanvas = false;
             try { if (typeof __app_id !== 'undefined') isCanvas = true; } catch(e) {}
             if (isCanvas) return ""; 
 
-            let key = localStorage.getItem('my_sms_gemini_key');
-            if (!key) {
-                key = window.prompt("A sua API Key anterior foi detetada como 'vazada' e bloqueada pela Google.\n\nPor favor, gere uma nova no Google AI Studio e cole aqui:");
-                if (!key) return null; // Utilizador cancelou
-                localStorage.setItem('my_sms_gemini_key', key.trim());
-            }
+            key = window.prompt("Por favor, insira a sua API Key do Google Gemini Studio:");
+            if (!key) return null; // Utilizador cancelou
+            localStorage.setItem('my_sms_gemini_key', key.trim());
             return key.trim();
         }
         
@@ -568,9 +564,14 @@ service cloud.firestore {
                     // Verifica se é uma falha recuperável
                     const isTransient = err.message.includes('429') || err.message.includes('500') || err.message.includes('503') || err.message.includes('Failed to fetch');
                     
-                    // Se não for um erro recuperável (ex: 400 Bad Request, 403 API Key Leak) OU se esgotou as tentativas, desiste.
-                    if (i === retries || !isTransient) {
+                    // Se não for um erro recuperável (ex: 400 Bad Request, 401 Unauthorized, 403 API Key Leak) OU se esgotou as tentativas, desiste.
+                    if (i === retries || (!isTransient && !err.message.includes('401'))) {
                         throw err; 
+                    }
+                    // Trata erro 401 limpando a chave para pedir nova na próxima vez e parando o backoff para não travar
+                    if(err.message.includes('401')){
+                        localStorage.removeItem('my_sms_gemini_key');
+                        throw new Error("Chave de API inválida ou não autorizada (401). A sua chave foi removida. Por favor, gere uma nova.");
                     }
                     console.log(`Aviso IA: A API teve um problema temporário (${err.message}). A tentar novamente em ${delays[i]/1000} segundos...`);
                     await new Promise(res => setTimeout(res, delays[i]));
@@ -648,6 +649,9 @@ service cloud.firestore {
 
         window.closeSimilarityModal = () => {
             document.getElementById('similarityModal').classList.add('hidden');
+            // Restabelece as classes do botão de consolidar quando o modal é fechado
+            document.getElementById('btnConsolidar').classList.add('hidden');
+            document.getElementById('btnConsolidar').classList.remove('flex');
         };
 
         window.openActionPlanModal = () => {
@@ -710,7 +714,9 @@ Forneça a sua resposta EXATAMENTE no seguinte formato Markdown:
                 if (aiResponse) {
                     aiResponse = aiResponse.replace(/\*\*(.*?)\*\*/g, '<strong class="text-slate-900">$1</strong>');
                     aiResponse = aiResponse.replace(/\*(.*?)\*/g, '<em class="text-slate-800">$1</em>');
-                    aiResponse = aiResponse.replace(/## (.*?)\n/g, '<h2 class="text-lg font-extrabold text-emerald-700 mt-5 mb-2 bg-emerald-50 px-3 py-1.5 rounded inline-block">$1</h2>\n');
+                    // Expressões regulares ajustadas para apanhar bem os parágrafos em vários formatos
+                    aiResponse = aiResponse.replace(/### (.*?)(?:\n|$)/g, '<h3 class="text-lg font-bold text-slate-800 mt-5 mb-2 border-b pb-1">$1</h3>\n');
+                    aiResponse = aiResponse.replace(/## (.*?)(?:\n|$)/g, '<h2 class="text-lg font-extrabold text-emerald-700 mt-5 mb-2 bg-emerald-50 px-3 py-1.5 rounded inline-block">$1</h2>\n');
                     aiResponse = aiResponse.replace(/\n\n/g, '<br><br>');
                     
                     document.getElementById('actionPlanContent').innerHTML = aiResponse;
@@ -810,8 +816,7 @@ ${smsListText}`;
                     msgErroLote = err.message;
                     finalAiResponse += `\n\n**[Aviso: Falha ao analisar o Lote ${currentBatch + 1}. Erro devolvido: ${err.message}]**\n\n`;
                     
-                    if (err.message.includes('403') || err.message.includes('leaked')) {
-                        localStorage.removeItem('my_sms_gemini_key');
+                    if (err.message.includes('403') || err.message.includes('leaked') || err.message.includes('401')) {
                         break; // Pára de tentar os outros lotes se a chave foi bloqueada
                     }
                 }
@@ -824,8 +829,8 @@ ${smsListText}`;
 
             loader.style.display = 'none';
 
-            if (msgErroLote.includes('leaked')) {
-                alert("A sua API Key foi bloqueada pela Google por ter sido exposta publicamente. Por favor, gere uma nova no Google AI Studio.");
+            if (msgErroLote.includes('leaked') || msgErroLote.includes('401')) {
+                 alert(`Problema com a API Key: ${msgErroLote}`);
                 return;
             }
 
@@ -835,8 +840,8 @@ ${smsListText}`;
                 let htmlFormat = finalAiResponse;
                 htmlFormat = htmlFormat.replace(/\*\*(.*?)\*\*/g, '<strong class="text-slate-900">$1</strong>');
                 htmlFormat = htmlFormat.replace(/\*(.*?)\*/g, '<em class="text-slate-800">$1</em>');
-                htmlFormat = htmlFormat.replace(/### (.*?)\n/g, '<h3 class="text-lg font-bold text-slate-800 mt-5 mb-2 border-b pb-1">$1</h3>\n');
-                htmlFormat = htmlFormat.replace(/## (.*?)\n/g, '<h2 class="text-xl font-extrabold text-indigo-700 mt-6 mb-3 bg-indigo-50 px-3 py-2 rounded-lg inline-block">$1</h2>\n');
+                htmlFormat = htmlFormat.replace(/### (.*?)(?:\n|$)/g, '<h3 class="text-lg font-bold text-slate-800 mt-5 mb-2 border-b pb-1">$1</h3>\n');
+                htmlFormat = htmlFormat.replace(/## (.*?)(?:\n|$)/g, '<h2 class="text-xl font-extrabold text-indigo-700 mt-6 mb-3 bg-indigo-50 px-3 py-2 rounded-lg inline-block">$1</h2>\n');
                 htmlFormat = htmlFormat.replace(/\n\n/g, '<br><br>');
                 
                 let warningHTML = "";
@@ -847,11 +852,14 @@ ${smsListText}`;
                 document.getElementById('similarityDescText').innerHTML = `Agrupamento de <strong>todas as ${smsDaAbaTotal.length} SMS</strong> da aba selecionada, processadas em ${totalBatches} lote(s) de alta densidade.`;
                 document.getElementById('similarityContent').innerHTML = warningHTML + htmlFormat;
                 
+                const btnConsolidar = document.getElementById('btnConsolidar');
                 // Exibe o botão de Consolidar apenas se a análise precisou de ser dividida em lotes
                 if (totalBatches > 1 && !houveErroLote) {
-                    document.getElementById('btnConsolidar').classList.remove('hidden');
+                    btnConsolidar.classList.remove('hidden');
+                    btnConsolidar.classList.add('flex'); // Força a exibição
                 } else {
-                    document.getElementById('btnConsolidar').classList.add('hidden');
+                    btnConsolidar.classList.add('hidden');
+                    btnConsolidar.classList.remove('flex');
                 }
                 
                 openSimilarityModal();
@@ -867,6 +875,17 @@ ${smsListText}`;
             const apiKey = await getGeminiKey();
             if (apiKey === null) return;
             const modelName = (!apiKey || apiKey === "") ? "gemini-2.5-flash-preview-09-2025" : "gemini-2.5-flash";
+
+            // FEEDBACK VISUAL DIRETO NO MODAL E NO BOTÃO
+            const btnConsolidar = document.getElementById('btnConsolidar');
+            const originalBtnHTML = btnConsolidar.innerHTML;
+            btnConsolidar.innerHTML = `<svg class="animate-spin h-5 w-5 mr-2" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg> A processar...`;
+            btnConsolidar.disabled = true;
+            btnConsolidar.classList.add('opacity-75', 'cursor-wait');
+
+            const contentArea = document.getElementById('similarityContent');
+            const originalContentHTML = contentArea.innerHTML;
+            contentArea.innerHTML = `<div class="flex flex-col items-center justify-center py-16 text-slate-500"><svg class="animate-spin h-12 w-12 text-fuchsia-600 mb-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg><p class="text-lg font-bold text-slate-700">A cruzar temas e consolidar dados...</p><p class="text-sm mt-2">A IA está a gerar o relatório definitivo. Por favor, aguarde.</p></div>`;
 
             loaderText.textContent = "A consolidar temas cruzados dos lotes... Isto gerará o relatório final definitivo.";
             loader.style.display = 'flex';
@@ -906,19 +925,30 @@ ${rawAnalysisResult}`;
                     let htmlFormat = finalConsolidated;
                     htmlFormat = htmlFormat.replace(/\*\*(.*?)\*\*/g, '<strong class="text-slate-900">$1</strong>');
                     htmlFormat = htmlFormat.replace(/\*(.*?)\*/g, '<em class="text-slate-800">$1</em>');
-                    htmlFormat = htmlFormat.replace(/### (.*?)\n/g, '<h3 class="text-lg font-bold text-slate-800 mt-5 mb-2 border-b pb-1">$1</h3>\n');
-                    htmlFormat = htmlFormat.replace(/## (.*?)\n/g, '<h2 class="text-xl font-extrabold text-indigo-700 mt-6 mb-3 bg-indigo-50 px-3 py-2 rounded-lg inline-block">$1</h2>\n');
+                    htmlFormat = htmlFormat.replace(/### (.*?)(?:\n|$)/g, '<h3 class="text-lg font-bold text-slate-800 mt-5 mb-2 border-b pb-1">$1</h3>\n');
+                    htmlFormat = htmlFormat.replace(/## (.*?)(?:\n|$)/g, '<h2 class="text-xl font-extrabold text-indigo-700 mt-6 mb-3 bg-indigo-50 px-3 py-2 rounded-lg inline-block">$1</h2>\n');
                     htmlFormat = htmlFormat.replace(/\n\n/g, '<br><br>');
                     
                     document.getElementById('similarityDescText').innerHTML = `Relatório <strong>Consolidado</strong>. Todos os temas repetidos que estavam espalhados por vários lotes foram unidos com sucesso.`;
-                    document.getElementById('similarityContent').innerHTML = htmlFormat;
+                    contentArea.innerHTML = htmlFormat;
                     
                     // Esconde o botão após consolidar para não deixar o utilizador clicar duas vezes
-                    document.getElementById('btnConsolidar').classList.add('hidden');
+                    btnConsolidar.classList.add('hidden');
+                    btnConsolidar.classList.remove('flex');
                 }
             } catch (err) {
                 console.error("Erro na consolidação:", err);
                 alert(`Erro ao tentar consolidar o relatório: ${err.message}`);
+                
+                // Em caso de erro, restaura o botão e o texto antigo para que o utilizador possa tentar novamente
+                btnConsolidar.innerHTML = originalBtnHTML;
+                btnConsolidar.disabled = false;
+                btnConsolidar.classList.remove('opacity-75', 'cursor-wait');
+                contentArea.innerHTML = originalContentHTML;
+                
+                if(err.message.includes('401')){
+                     localStorage.removeItem('my_sms_gemini_key');
+                }
             } finally {
                 loader.style.display = 'none';
                 loaderText.textContent = "A processar...";
