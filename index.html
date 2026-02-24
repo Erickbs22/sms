@@ -609,8 +609,8 @@ Forneça a sua resposta EXATAMENTE no seguinte formato Markdown:
                 let smsListText = `\n\n=== MÓDULO/PRODUTO: ${activeTab.toUpperCase()} (PARTE ${currentBatch + 1} de ${totalBatches}) ===\n`;
                 smsListText += batchData.map(i => {
                     // Limitamos levemente a descrição individual para evitar falhas de tamanho, mas enviamos TODAS as SMS
-                    const descSegura = i.descricao.length > 1500 
-                        ? i.descricao.substring(0, 1500) + "... [texto longo truncado]" 
+                    const descSegura = i.descricao.length > 600
+                        ? i.descricao.substring(0, 600) + "... [texto longo truncado]" 
                         : i.descricao;
                     return `[SMS: ${i.sms} | Cliente: ${i.cliente}]\nDescrição: ${descSegura}`;
                 }).join("\n\n---\n\n");
@@ -876,4 +876,5 @@ ${smsListText}`;
     </script>
 </body>
 </html>
+
 
