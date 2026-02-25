@@ -153,7 +153,7 @@ service cloud.firestore {
                     <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
                 </button>
             </div>
-            <div id="similarityDescText" class="text-slate-500 mb-6 text-sm border-b pb-4">Agrupamento inteligente dos SMS baseando-se no contexto das descrições.</div>
+            <div id="similarityDescText" class="text-slate-500 mb-6 text-sm border-b pb-4">Agrupamento inteligente dos SMS baseando-se no módulo e contexto.</div>
             <div id="similarityContent" class="overflow-y-auto custom-scroll flex-1 bg-slate-50 p-6 rounded-xl border border-slate-200 text-sm text-slate-700 whitespace-pre-wrap leading-relaxed shadow-inner">
                 <!-- Conteúdo gerado pela IA aparecerá aqui -->
             </div>
@@ -167,7 +167,7 @@ service cloud.firestore {
                 </button>
                 <button id="btnSaveAnalysis" onclick="saveAnalysisAndMark()" title="Guardar histórico e marcar SMS como lidas" class="flex items-center gap-2 px-5 py-3 bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-bold rounded-xl transition-colors shadow-md">
                     <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd" /></svg>
-                    Guardar & Marcar SMS
+                    Guardar & Marcar
                 </button>
                 <button onclick="closeSimilarityModal()" class="px-6 py-3 bg-slate-800 hover:bg-slate-900 text-white text-sm font-bold rounded-xl transition-colors shadow-md">Fechar</button>
             </div>
@@ -282,12 +282,12 @@ service cloud.firestore {
             </div>
             <div class="md:col-span-1 flex items-center justify-center bg-white border border-slate-300 rounded-xl shadow-sm px-3">
                 <label class="flex items-center gap-2 cursor-pointer text-sm font-medium text-slate-600">
-                    <input type="checkbox" id="hideAnalyzedCheckbox" class="w-5 h-5 text-blue-600 rounded focus:ring-blue-500 cursor-pointer" onchange="renderTable()">
+                    <input type="checkbox" id="hideAnalyzedCheckbox" class="w-5 h-5 text-blue-600 rounded focus:ring-blue-500 cursor-pointer" onchange="window.renderTable()">
                     Ocultar Analisadas
                 </label>
             </div>
             <div class="md:col-span-1">
-                <button id="btnAnalyzeThemes" onclick="analyzeSimilarities()" title="Ler SMS não analisadas desta aba" class="hidden w-full h-full bg-indigo-50 hover:bg-indigo-100 text-indigo-700 border border-indigo-200 px-2 py-2 rounded-xl shadow-sm font-bold flex-col items-center justify-center transition-all group">
+                <button id="btnAnalyzeThemes" onclick="analyzeSimilarities()" title="Ler registos não analisados desta aba" class="hidden w-full h-full bg-indigo-50 hover:bg-indigo-100 text-indigo-700 border border-indigo-200 px-2 py-2 rounded-xl shadow-sm font-bold flex-col items-center justify-center transition-all group">
                     <span class="text-xl group-hover:scale-110 transition-transform">✨</span>
                     <span class="text-[10px] uppercase tracking-wider mt-1 text-center">Analisar Aba</span>
                 </button>
@@ -338,15 +338,15 @@ service cloud.firestore {
         // === VARIÁVEIS DE ESTADO E CONFIGURAÇÃO ===
         let db, auth, currentUser;
         let currentData = [];
-        let savedAnalyses = []; // Guarda o histórico de análises do firebase
+        let savedAnalyses = []; 
         let activeTab = 'Todos';
         let pendingDeleteId = null;
         let isLocalMode = false;
         let unsubscribeSnapshot = null;
         let unsubscribeAnalysesSnapshot = null;
         
-        let rawAnalysisResult = ""; // Guarda o texto bruto da análise atual
-        let analyzedSmsIdsCache = []; // Lista temporária de IDs para marcar como lidas após guardar análise
+        let rawAnalysisResult = ""; 
+        let analyzedSmsIdsCache = []; 
 
         // Configuração Hardcoded 
         const firebaseConfig = {
@@ -408,7 +408,7 @@ service cloud.firestore {
             if(savedAn) savedAnalyses = JSON.parse(savedAn);
             
             updateClientDropdown();
-            renderTable();
+            if (window.renderTable) window.renderTable();
         };
 
         function saveLocalData() {
@@ -426,7 +426,7 @@ service cloud.firestore {
             unsubscribeSnapshot = onSnapshot(colRef, (snapshot) => {
                 currentData = snapshot.docs.map(doc => doc.data());
                 updateClientDropdown();
-                renderTable();
+                if (window.renderTable) window.renderTable();
             }, (error) => {
                 console.error("Erro ao ler dados:", error);
                 
@@ -470,7 +470,7 @@ service cloud.firestore {
                 const item = currentData.find(i => i.sms === smsId);
                 if (item) item.previsao = novaData;
                 saveLocalData();
-                renderTable();
+                if (window.renderTable) window.renderTable();
                 return;
             }
 
@@ -502,7 +502,7 @@ service cloud.firestore {
                 currentData = currentData.filter(i => i.sms !== pendingDeleteId);
                 saveLocalData();
                 closeDeleteModal();
-                renderTable();
+                if (window.renderTable) window.renderTable();
                 return;
             }
 
@@ -549,14 +549,14 @@ service cloud.firestore {
                 return;
             }
 
-            loaderText.textContent = `A apagar ${smsToDelete.length} SMS da aba ${activeTab}...`;
+            loaderText.textContent = `A apagar ${smsToDelete.length} registos da aba ${activeTab}...`;
             loader.style.display = 'flex';
             closeDeleteAllModal();
 
             if (isLocalMode) {
                 currentData = currentData.filter(i => i.modulo !== activeTab);
                 saveLocalData();
-                renderTable();
+                if (window.renderTable) window.renderTable();
                 loader.style.display = 'none';
                 return;
             }
@@ -765,7 +765,7 @@ service cloud.firestore {
                     if (isLocalMode) {
                         item.resumo = `✨ IA: ${aiSummary}`;
                         saveLocalData();
-                        renderTable();
+                        if (window.renderTable) window.renderTable();
                     } else {
                         const docRef = doc(db, 'artifacts', appIdString, 'public', 'data', 'sms_list', smsId);
                         await updateDoc(docRef, { resumo: `✨ IA: ${aiSummary}` });
@@ -845,6 +845,7 @@ Forneça a sua resposta EXATAMENTE no seguinte formato Markdown:
                 if (aiResponse) {
                     aiResponse = aiResponse.replace(/\*\*(.*?)\*\*/g, '<strong class="text-slate-900">$1</strong>');
                     aiResponse = aiResponse.replace(/\*(.*?)\*/g, '<em class="text-slate-800">$1</em>');
+                    // Expressões regulares ajustadas para apanhar bem os parágrafos em vários formatos
                     aiResponse = aiResponse.replace(/### (.*?)(?:\n|$)/g, '<h3 class="text-lg font-bold text-slate-800 mt-5 mb-2 border-b pb-1">$1</h3>\n');
                     aiResponse = aiResponse.replace(/## (.*?)(?:\n|$)/g, '<h2 class="text-lg font-extrabold text-emerald-700 mt-5 mb-2 bg-emerald-50 px-3 py-1.5 rounded inline-block">$1</h2>\n');
                     aiResponse = aiResponse.replace(/\n\n/g, '<br><br>');
@@ -921,26 +922,29 @@ Forneça a sua resposta EXATAMENTE no seguinte formato Markdown:
             let msgErroLote = "";
 
             for (let currentBatch = 0; currentBatch < totalBatches; currentBatch++) {
-                loaderText.textContent = `A analisar SMS da aba ${activeTab} (Lote ${currentBatch + 1} de ${totalBatches})...`;
+                loaderText.textContent = `A analisar registos da aba ${activeTab} (Lote ${currentBatch + 1} de ${totalBatches})...`;
 
                 const batchData = smsDaAbaTotal.slice(currentBatch * BATCH_SIZE, (currentBatch + 1) * BATCH_SIZE);
                 
-                let smsListText = `\n\n=== MÓDULO/PRODUTO: ${activeTab.toUpperCase()} (LOTE ${currentBatch + 1}) ===\n`;
+                let smsListText = `\n\n=== MÓDULO DE NEGÓCIO: ${activeTab.toUpperCase()} (LOTE ${currentBatch + 1}) ===\n`;
                 smsListText += batchData.map(i => {
                     const descSegura = sanitizeText(i.descricao).substring(0, 2000); 
-                    return `[SMS: ${i.sms} | Cliente: ${i.cliente}]\nDescrição: ${descSegura}`;
+                    const modSis = i.modulo_sistema ? ` | Sistema: ${i.modulo_sistema}` : "";
+                    return `[SMS: ${i.sms} | Cliente: ${i.cliente}${modSis}]\nDescrição: ${descSegura}`;
                 }).join("\n\n---\n\n");
                 
-                const prompt = `Atue como um Especialista em Suporte de TI e Análise de Requisitos de Software.
-Abaixo estão as SMS referentes ao módulo/produto '${activeTab}'.
-A sua tarefa é ler este grupo e procurar similaridades, agrupando as SMS por temas, funcionalidades ou problemas recorrentes.
+                const prompt = `Atue como um Especialista em Suporte de TI.
+Abaixo estão os registos referentes à área de negócio '${activeTab}'. Elas podem pertencer a diferentes 'Sistemas' (indicado em cada um).
+A sua tarefa é procurar similaridades e agrupá-los.
 
 Regras OBRIGATÓRIAS:
 1. Comece com um cabeçalho '## Resumo Analítico - Lote ${currentBatch + 1}'.
-2. Crie subgrupos por Temas de similaridade (ex: '### Lentidão no Sistema', '### Dúvidas Financeiras').
-3. Forneça uma breve explicação de 1 a 2 linhas sobre o que aquele tema aborda.
-4. Liste os números de SMS exatos que pertencem a esse grupo e o respetivo Cliente afetado.
-5. Formate a resposta usando Markdown limpo.
+2. Agrupe os registos comparando e respeitando o 'Sistema' de cada um. Não misture problemas de sistemas diferentes no mesmo tema.
+3. Se um registo não tiver 'Sistema' indicado, analise-o num grupo de contexto geral.
+4. Crie subgrupos por Sistema e depois por Temas de similaridade (ex: '### [Nome do Sistema] - Lentidão no Login').
+5. Forneça uma breve explicação de 1 a 2 linhas sobre o que aquele tema aborda.
+6. Liste os números de SMS exatos e os respetivos Clientes afetados.
+7. Formate a resposta usando Markdown limpo.
 
 Aqui estão os dados deste lote:
 ${smsListText}`;
@@ -1004,7 +1008,7 @@ ${smsListText}`;
                     warningHTML = `<div class="bg-red-50 text-red-600 p-3 rounded-lg mb-4 text-sm font-bold border border-red-200">Atenção: A Google rejeitou um ou mais lotes. Motivo principal detetado: ${msgErroLote}</div>`;
                 }
 
-                document.getElementById('similarityDescText').innerHTML = `Agrupamento de <strong>todas as ${smsDaAbaTotal.length} SMS</strong> da aba selecionada, processadas em ${totalBatches} lote(s) de alta densidade.`;
+                document.getElementById('similarityDescText').innerHTML = `Agrupamento de <strong>todos os ${smsDaAbaTotal.length} registos</strong> da aba selecionada, processados em ${totalBatches} lote(s) de alta densidade.`;
                 document.getElementById('similarityContent').innerHTML = warningHTML + htmlFormat;
                 
                 const btnConsolidar = document.getElementById('btnConsolidar');
@@ -1043,12 +1047,13 @@ ${smsListText}`;
             loader.style.display = 'flex';
 
             const prompt = `Atue como um Especialista em Suporte de TI.
-Eu gerei um relatório de análise de SMS dividindo os dados em vários lotes. Por causa disso, temas semelhantes podem estar espalhados em blocos diferentes.
+Eu gerei um relatório de análise dividindo os dados em vários lotes. Por causa disso, temas semelhantes podem estar espalhados em blocos diferentes.
 O seu objetivo é fazer uma SEGUNDA PASSAGEM (Consolidação Final):
 1. Leia todo o relatório em lotes abaixo.
-2. Agrupe todos os temas que são iguais ou muito semelhantes num único tópico abrangente, somando os IDs de SMS afetados.
-3. Remova completamente as menções aos "Lotes" (Lote 1, Lote 2, etc.) e crie um único relatório unificado, coeso e definitivo.
-4. Mantenha o formato limpo e profissional em Markdown, utilizando '##' para o Título Geral e '###' para os Temas consolidados.
+2. Agrupe os temas mantendo a separação rigorosa por 'Sistema'. Não funda problemas de sistemas diferentes, mesmo que pareçam similares. Se não houver sistema, mantém no contexto geral.
+3. Agrupe todos os temas que são iguais ou muito semelhantes num único tópico abrangente, somando os IDs/SMS afetados.
+4. Remova completamente as menções aos "Lotes" (Lote 1, Lote 2, etc.) e crie um único relatório unificado, coeso e definitivo.
+5. Mantenha o formato limpo e profissional em Markdown, utilizando '##' para o Título Geral (Sistema) e '###' para os Temas consolidados.
 
 Aqui está o relatório bruto dividido em lotes:
 ${rawAnalysisResult}`;
@@ -1109,7 +1114,7 @@ ${rawAnalysisResult}`;
         window.saveAnalysisAndMark = async () => {
             if (!rawAnalysisResult) return;
             
-            loaderText.textContent = "A guardar análise e a marcar SMS...";
+            loaderText.textContent = "A guardar análise e a marcar registos...";
             loader.style.display = 'flex';
 
             try {
@@ -1136,7 +1141,7 @@ ${rawAnalysisResult}`;
                         if (idx > -1) currentData[idx].analisada = true;
                     });
                     saveLocalData();
-                    renderTable();
+                    if (window.renderTable) window.renderTable();
                 } else if (currentUser) {
                     // Update em lotes para evitar sobrecarga no Firebase
                     const batchSize = 100;
@@ -1149,7 +1154,7 @@ ${rawAnalysisResult}`;
                     }
                 }
 
-                alert("A análise foi guardada no Histórico! As SMS lidas foram agora marcadas como Analisadas.");
+                alert("A análise foi guardada no Histórico! Os registos processados foram marcados como Analisados.");
                 closeSimilarityModal();
             } catch (error) {
                 console.error("Erro ao guardar análise:", error);
@@ -1166,7 +1171,7 @@ ${rawAnalysisResult}`;
                 return;
             }
             
-            const exportText = `# Relatório de Análise de Padrões SMS - ${activeTab.toUpperCase()}\nGerado em: ${new Date().toLocaleString()}\n\n` + rawAnalysisResult;
+            const exportText = `# Relatório de Análise de Padrões - ${activeTab.toUpperCase()}\nGerado em: ${new Date().toLocaleString()}\n\n` + rawAnalysisResult;
             const blob = new Blob([exportText], { type: "text/markdown;charset=utf-8" });
             const url = URL.createObjectURL(blob);
             const a = document.createElement('a');
@@ -1194,6 +1199,7 @@ ${rawAnalysisResult}`;
             
             if (isLocalMode) {
                 dataArray.forEach(newItem => {
+                    // Tenta atualizar se já houver com o mesmo ID
                     const index = currentData.findIndex(i => i.sms === newItem.sms);
                     if(index > -1) {
                         const oldPrevisao = currentData[index].previsao;
@@ -1207,7 +1213,7 @@ ${rawAnalysisResult}`;
                 });
                 saveLocalData();
                 updateClientDropdown();
-                renderTable();
+                if (window.renderTable) window.renderTable();
                 loader.style.display = 'none';
                 return;
             }
@@ -1230,32 +1236,83 @@ ${rawAnalysisResult}`;
             }
         }
 
+        // NOVO PARSER: Adaptado para a estrutura exata CLIENTE¬SMS¬DESCRICAO¬RESUMO¬MODULO¬
         function parseText(text, currentTab) {
-            let cleanText = text.replace(/^CLIENTE¬SMS¬DESCRICAO¬RESUMO¬\r?\n?/, '');
-            const parts = cleanText.split('¬');
-            const dataArray = [];
+            const normalizedText = text.replace(/\r\n/g, '\n');
+            const lines = normalizedText.split('\n');
+            if (lines.length === 0) return [];
             
-            for (let i = 0; i < parts.length - 3; i += 4) {
-                const c = parts[i]?.trim();
-                const s = parts[i+1]?.trim();
-                const d = parts[i+2]?.trim();
-                const r = parts[i+3]?.trim();
+            const headerLine = lines[0].toUpperCase();
+            
+            // Determina se o ficheiro tem 4 colunas (antigo) ou 5 colunas (novo, com módulo)
+            const EXPECTED = headerLine.includes('MODULO') ? 5 : 4;
+            
+            // Remove header se existir
+            if (headerLine.includes('CLIENTE')) {
+                lines.shift();
+            }
+            const dataText = lines.join('\n');
+            const rawParts = dataText.split('¬');
+            const dataArray = [];
+            let tempValues = [];
+            
+            for (let i = 0; i < rawParts.length; i++) {
+                let part = rawParts[i];
                 
-                if (c && s && s.length < 50 && !s.includes('/')) {
-                    const calculadoModulo = (currentTab !== 'Todos') ? currentTab : categorizar(d + " " + r);
-                    
-                    dataArray.push({
-                        cliente: c,
-                        sms: s,
-                        descricao: d,
-                        resumo: r,
-                        modulo: calculadoModulo,
-                        timestamp: Date.now(),
-                        analisada: false // SMS novas não foram analisadas
-                    });
+                if (tempValues.length === EXPECTED - 1) {
+                    const nlMatch = part.match(/([\s\S]*?)\n([\s\S]+)/);
+                    if (nlMatch) {
+                        tempValues.push(nlMatch[1].trim());
+                        processRecord(tempValues, currentTab, dataArray, EXPECTED);
+                        tempValues = [nlMatch[2].trim()];
+                    } else {
+                        tempValues.push(part.trim());
+                    }
+                } else if (tempValues.length === EXPECTED) {
+                    processRecord(tempValues, currentTab, dataArray, EXPECTED);
+                    tempValues = [];
+                    const c2 = part.trim();
+                    if (c2) tempValues.push(c2);
+                } else {
+                    tempValues.push(part.trim());
                 }
             }
+            if (tempValues.length >= 2) {
+                processRecord(tempValues, currentTab, dataArray, EXPECTED);
+            }
             return dataArray;
+        }
+
+        function processRecord(values, currentTab, dataArray, expectedCols) {
+            let c = values[0];
+            if (c && c.includes('\n')) c = c.split('\n').pop().trim(); 
+            
+            // A coluna SMS será agora incondicionalmente a 2ª coluna! (values[1])
+            const s = values[1]; 
+            const d = values[2];
+            const r = values[3];
+            const m = expectedCols === 5 ? values[4] : "";
+            
+            const cleanC = c ? c.trim() : '';
+            const cleanS = s ? s.trim() : '';
+            const cleanD = d ? d.trim() : '';
+            const cleanR = r ? r.trim() : '';
+            const cleanM = m ? m.trim() : '';
+
+            // Impede SMS em branco ou lixo residual
+            if (cleanC && cleanS && cleanS.length < 50 && !cleanS.includes('/') && cleanC.toUpperCase() !== 'CLIENTE') {
+                const calculadoAba = (currentTab !== 'Todos') ? currentTab : categorizar((cleanD || "") + " " + (cleanR || ""));
+                dataArray.push({
+                    cliente: cleanC,
+                    sms: cleanS,
+                    descricao: cleanD,
+                    resumo: cleanR,
+                    modulo_sistema: cleanM,
+                    modulo: calculadoAba,
+                    timestamp: Date.now(),
+                    analisada: false
+                });
+            }
         }
 
         // === EVENTOS DA INTERFACE ===
@@ -1288,7 +1345,7 @@ ${rawAnalysisResult}`;
                 uploadLabel.textContent = `Subir ficheiro para a aba ${activeTab}:`;
             }
             
-            renderTable();
+            if (window.renderTable) window.renderTable();
         };
 
         function renderTable() {
@@ -1313,7 +1370,8 @@ ${rawAnalysisResult}`;
                     i.cliente.toLowerCase().includes(searchTerm) ||
                     i.sms.toLowerCase().includes(searchTerm) ||
                     i.descricao.toLowerCase().includes(searchTerm) ||
-                    i.resumo.toLowerCase().includes(searchTerm)
+                    i.resumo.toLowerCase().includes(searchTerm) ||
+                    (i.modulo_sistema && i.modulo_sistema.toLowerCase().includes(searchTerm))
                 );
             }
             
@@ -1334,17 +1392,22 @@ ${rawAnalysisResult}`;
                     
                     const dataPrevisao = item.previsao ? item.previsao : '';
                     
-                    // Identificador visual de estado da SMS
                     const statusBadge = item.analisada 
                         ? `<span class="text-[9px] px-1.5 py-0.5 rounded bg-green-100 text-green-700 font-bold uppercase tracking-wider ml-2 border border-green-200" title="Esta SMS já fez parte de uma Análise de Temas.">✓ Analisada</span>` 
+                        : '';
+
+                    // Adicionada a etiqueta visual para o Módulo de Sistema
+                    const moduloSistemaBadge = item.modulo_sistema
+                        ? `<span class="text-[10px] px-2 py-0.5 rounded bg-blue-100 text-blue-700 font-bold uppercase tracking-wider border border-blue-200" title="Sistema / Módulo Interno">${item.modulo_sistema}</span>`
                         : '';
 
                     tr.innerHTML = `
                         <td class="px-5 py-4 text-sm font-bold text-slate-700 align-top">${item.cliente}</td>
                         <td class="px-5 py-4 text-sm align-top">
                             <span class="sms-badge">${item.sms}</span>
-                            <div class="mt-2 flex items-center">
+                            <div class="mt-2 flex items-center flex-wrap gap-1">
                                 <span class="text-[10px] px-2 py-0.5 rounded bg-slate-200 text-slate-600 font-bold uppercase tracking-wider">${item.modulo}</span>
+                                ${moduloSistemaBadge}
                                 ${statusBadge}
                             </div>
                         </td>
@@ -1384,6 +1447,7 @@ ${rawAnalysisResult}`;
                 });
             }
         }
+        window.renderTable = renderTable;
 
         // Listeners
         fileInput.addEventListener('change', (e) => {
