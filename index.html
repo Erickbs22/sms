@@ -24,6 +24,12 @@
             color: #1d4ed8;
             font-weight: bold;
         }
+        .subtab-active {
+            background-color: #f1f5f9;
+            color: #0f172a;
+            font-weight: bold;
+            border-radius: 8px;
+        }
         .loading-overlay {
             display: none;
             position: fixed;
@@ -258,8 +264,8 @@ service cloud.firestore {
             </div>
         </header>
 
-        <!-- Navegação por Abas -->
-        <div class="flex flex-wrap gap-2 mb-6 border-b border-slate-200 overflow-x-auto custom-scroll">
+        <!-- Navegação por Abas Principais -->
+        <div class="flex flex-wrap gap-2 mb-2 overflow-x-auto custom-scroll">
             <button onclick="changeTab('ERP')" id="tab-ERP" class="px-6 py-3 text-slate-500 hover:text-blue-600 transition-all tab-btn">ERP</button>
             <button onclick="changeTab('RH')" id="tab-RH" class="px-6 py-3 text-slate-500 hover:text-blue-600 transition-all tab-btn">RH</button>
             <button onclick="changeTab('Logística')" id="tab-Logística" class="px-6 py-3 text-slate-500 hover:text-blue-600 transition-all tab-btn">Logística</button>
@@ -267,6 +273,21 @@ service cloud.firestore {
             <button onclick="changeTab('Saúde')" id="tab-Saúde" class="px-6 py-3 text-slate-500 hover:text-blue-600 transition-all tab-btn">Saúde</button>
             <button onclick="changeTab('Todos')" id="tab-Todos" class="px-6 py-3 text-slate-500 hover:text-blue-600 transition-all tab-btn tab-active">Todos</button>
         </div>
+
+        <!-- Navegação de Sub-Abas (Específico para Saúde) -->
+        <div id="subTabsContainer" class="hidden flex-wrap gap-2 mb-6 pb-2 border-b border-slate-200 overflow-x-auto custom-scroll">
+            <button onclick="changeSubTab('Todos')" id="subtab-Todos" class="px-4 py-1.5 text-sm text-slate-500 hover:text-blue-600 transition-all subtab-btn subtab-active">Toda a Saúde</button>
+            <button onclick="changeSubTab('AG')" id="subtab-AG" class="px-4 py-1.5 text-sm text-slate-500 hover:text-blue-600 transition-all subtab-btn">AG</button>
+            <button onclick="changeSubTab('MG')" id="subtab-MG" class="px-4 py-1.5 text-sm text-slate-500 hover:text-blue-600 transition-all subtab-btn">MG</button>
+            <button onclick="changeSubTab('Moderna')" id="subtab-Moderna" class="px-4 py-1.5 text-sm text-slate-500 hover:text-blue-600 transition-all subtab-btn">Moderna</button>
+            <button onclick="changeSubTab('Otto')" id="subtab-Otto" class="px-4 py-1.5 text-sm text-slate-500 hover:text-blue-600 transition-all subtab-btn">Otto</button>
+            <button onclick="changeSubTab('Nexorede')" id="subtab-Nexorede" class="px-4 py-1.5 text-sm text-slate-500 hover:text-blue-600 transition-all subtab-btn">Nexorede</button>
+            <button onclick="changeSubTab('Conecta')" id="subtab-Conecta" class="px-4 py-1.5 text-sm text-slate-500 hover:text-blue-600 transition-all subtab-btn">Conecta</button>
+            <button onclick="changeSubTab('Lean')" id="subtab-Lean" class="px-4 py-1.5 text-sm text-slate-500 hover:text-blue-600 transition-all subtab-btn">Lean</button>
+            <button onclick="changeSubTab('Outros')" id="subtab-Outros" class="px-4 py-1.5 text-sm text-slate-500 hover:text-blue-600 transition-all subtab-btn">Outros</button>
+        </div>
+        <!-- Linha separadora padrão quando as sub-abas estão escondidas -->
+        <div id="defaultBorder" class="border-b border-slate-200 mb-6"></div>
 
         <!-- Filtros e Estatísticas -->
         <div class="grid grid-cols-1 md:grid-cols-8 gap-4 mb-6">
@@ -340,6 +361,7 @@ service cloud.firestore {
         let currentData = [];
         let savedAnalyses = []; 
         let activeTab = 'Todos';
+        let activeSubTab = 'Todos'; // Novo estado para controlar as sub-abas do Saúde
         let pendingDeleteId = null;
         let isLocalMode = false;
         let unsubscribeSnapshot = null;
@@ -518,21 +540,30 @@ service cloud.firestore {
             }
         };
 
-        // === Exclusão em Massa (Apagar Toda a Aba) ===
+        // === Exclusão em Massa (Apagar Toda a Aba ou Sub-aba) ===
         window.openDeleteAllModal = () => {
             if (activeTab === 'Todos') {
-                alert("Selecione uma aba específica (ex: ERP, RH) para apagar os seus dados.");
+                alert("Selecione uma aba específica (ex: ERP, RH, Saúde) para apagar os seus dados.");
                 return;
             }
             
-            const count = currentData.filter(i => i.modulo === activeTab).length;
+            let count = 0;
+            let targetLabel = activeTab;
+            
+            if (activeTab === 'Saúde' && activeSubTab !== 'Todos') {
+                count = currentData.filter(i => i.modulo === activeTab && i.sub_modulo === activeSubTab).length;
+                targetLabel = `Saúde ➔ ${activeSubTab}`;
+            } else {
+                count = currentData.filter(i => i.modulo === activeTab).length;
+            }
+            
             if (count === 0) {
-                alert(`A aba ${activeTab} já está vazia. Não há nada para apagar.`);
+                alert(`A visualização atual (${targetLabel}) já está vazia. Não há nada para apagar.`);
                 return;
             }
 
             document.getElementById('deleteAllCountText').textContent = count;
-            document.getElementById('deleteAllTabText').textContent = activeTab;
+            document.getElementById('deleteAllTabText').textContent = targetLabel;
             document.getElementById('deleteAllModal').classList.remove('hidden');
         };
 
@@ -543,18 +574,28 @@ service cloud.firestore {
         window.confirmDeleteAll = async () => {
             if (activeTab === 'Todos') return;
 
-            const smsToDelete = currentData.filter(i => i.modulo === activeTab);
+            let smsToDelete = [];
+            if (activeTab === 'Saúde' && activeSubTab !== 'Todos') {
+                smsToDelete = currentData.filter(i => i.modulo === activeTab && i.sub_modulo === activeSubTab);
+            } else {
+                smsToDelete = currentData.filter(i => i.modulo === activeTab);
+            }
+            
             if (smsToDelete.length === 0) {
                 closeDeleteAllModal();
                 return;
             }
 
-            loaderText.textContent = `A apagar ${smsToDelete.length} registos da aba ${activeTab}...`;
+            loaderText.textContent = `A apagar ${smsToDelete.length} registos da visualização atual...`;
             loader.style.display = 'flex';
             closeDeleteAllModal();
 
             if (isLocalMode) {
-                currentData = currentData.filter(i => i.modulo !== activeTab);
+                if (activeTab === 'Saúde' && activeSubTab !== 'Todos') {
+                    currentData = currentData.filter(i => !(i.modulo === activeTab && i.sub_modulo === activeSubTab));
+                } else {
+                    currentData = currentData.filter(i => i.modulo !== activeTab);
+                }
                 saveLocalData();
                 if (window.renderTable) window.renderTable();
                 loader.style.display = 'none';
@@ -894,14 +935,19 @@ Forneça a sua resposta EXATAMENTE no seguinte formato Markdown:
 
             const hideAnalyzed = document.getElementById('hideAnalyzedCheckbox').checked;
             
-            // Pega os SMS da aba atual. Se o filtro estiver ativo, ignora as que já foram analisadas.
+            // Filtra os SMS da aba atual. Se estiver na Saúde, aplica também o filtro da sub-aba se for diferente de Todos
             let smsDaAbaTotal = currentData.filter(i => i.modulo === activeTab);
+            if (activeTab === 'Saúde' && activeSubTab !== 'Todos') {
+                smsDaAbaTotal = smsDaAbaTotal.filter(i => i.sub_modulo === activeSubTab);
+            }
+            
+            // Se o filtro estiver ativo, ignora as que já foram analisadas.
             if (hideAnalyzed) {
                 smsDaAbaTotal = smsDaAbaTotal.filter(i => !i.analisada);
             }
 
             if (smsDaAbaTotal.length === 0) {
-                alert(`Não existem SMS pendentes na aba ${activeTab} para analisar.`);
+                alert(`Não existem SMS pendentes na aba atual para analisar.`);
                 return;
             }
 
@@ -920,13 +966,15 @@ Forneça a sua resposta EXATAMENTE no seguinte formato Markdown:
             let finalAiResponse = "";
             let houveErroLote = false;
             let msgErroLote = "";
+            
+            const targetName = activeTab === 'Saúde' && activeSubTab !== 'Todos' ? `SAÚDE - ${activeSubTab}` : activeTab;
 
             for (let currentBatch = 0; currentBatch < totalBatches; currentBatch++) {
-                loaderText.textContent = `A analisar registos da aba ${activeTab} (Lote ${currentBatch + 1} de ${totalBatches})...`;
+                loaderText.textContent = `A analisar registos da aba ${targetName} (Lote ${currentBatch + 1} de ${totalBatches})...`;
 
                 const batchData = smsDaAbaTotal.slice(currentBatch * BATCH_SIZE, (currentBatch + 1) * BATCH_SIZE);
                 
-                let smsListText = `\n\n=== MÓDULO DE NEGÓCIO: ${activeTab.toUpperCase()} (LOTE ${currentBatch + 1}) ===\n`;
+                let smsListText = `\n\n=== MÓDULO DE NEGÓCIO: ${targetName.toUpperCase()} (LOTE ${currentBatch + 1}) ===\n`;
                 smsListText += batchData.map(i => {
                     const descSegura = sanitizeText(i.descricao).substring(0, 2000); 
                     const modSis = i.modulo_sistema ? ` | Sistema: ${i.modulo_sistema}` : "";
@@ -934,7 +982,7 @@ Forneça a sua resposta EXATAMENTE no seguinte formato Markdown:
                 }).join("\n\n---\n\n");
                 
                 const prompt = `Atue como um Especialista em Suporte de TI.
-Abaixo estão os registos referentes à área de negócio '${activeTab}'. Elas podem pertencer a diferentes 'Sistemas' (indicado em cada um).
+Abaixo estão os registos referentes à área de negócio '${targetName}'. Elas podem pertencer a diferentes 'Sistemas' (indicado em cada um).
 A sua tarefa é procurar similaridades e agrupá-los.
 
 Regras OBRIGATÓRIAS:
@@ -1119,9 +1167,10 @@ ${rawAnalysisResult}`;
 
             try {
                 const analysisId = 'analise_' + Date.now();
+                const targetName = activeTab === 'Saúde' && activeSubTab !== 'Todos' ? `SAÚDE - ${activeSubTab}` : activeTab;
                 const analysisObj = {
                     id: analysisId,
-                    modulo: activeTab,
+                    modulo: targetName,
                     conteudo: rawAnalysisResult,
                     data: new Date().toISOString()
                 };
@@ -1171,18 +1220,32 @@ ${rawAnalysisResult}`;
                 return;
             }
             
-            const exportText = `# Relatório de Análise de Padrões - ${activeTab.toUpperCase()}\nGerado em: ${new Date().toLocaleString()}\n\n` + rawAnalysisResult;
+            const targetName = activeTab === 'Saúde' && activeSubTab !== 'Todos' ? `SAÚDE_${activeSubTab}` : activeTab;
+            const exportText = `# Relatório de Análise de Padrões - ${targetName.toUpperCase().replace('_', ' - ')}\nGerado em: ${new Date().toLocaleString()}\n\n` + rawAnalysisResult;
             const blob = new Blob([exportText], { type: "text/markdown;charset=utf-8" });
             const url = URL.createObjectURL(blob);
             const a = document.createElement('a');
             a.href = url;
             const dateStr = new Date().toISOString().split('T')[0];
-            a.download = `Analise_${activeTab}_${dateStr}.md`; 
+            a.download = `Analise_${targetName}_${dateStr}.md`; 
             document.body.appendChild(a);
             a.click();
             document.body.removeChild(a);
             URL.revokeObjectURL(url);
         };
+
+        // Função auxiliar para determinar a sub-aba de Saúde com base no conteúdo
+        function categorizarSubSaude(texto) {
+            const t = texto.toLowerCase();
+            if (/\b(ag)\b/i.test(t)) return 'AG';
+            if (/\b(mg)\b/i.test(t)) return 'MG';
+            if (t.includes('moderna')) return 'Moderna';
+            if (t.includes('otto')) return 'Otto';
+            if (t.includes('nexorede')) return 'Nexorede';
+            if (t.includes('conecta')) return 'Conecta';
+            if (t.includes('lean')) return 'Lean';
+            return 'Outros';
+        }
 
         function categorizar(texto) {
             const t = texto.toLowerCase();
@@ -1237,7 +1300,7 @@ ${rawAnalysisResult}`;
         }
 
         // NOVO PARSER: Adaptado para a estrutura exata CLIENTE¬SMS¬DESCRICAO¬RESUMO¬MODULO¬
-        function parseText(text, currentTab) {
+        function parseText(text, currentTab, currentSubTab) {
             const normalizedText = text.replace(/\r\n/g, '\n');
             const lines = normalizedText.split('\n');
             if (lines.length === 0) return [];
@@ -1263,13 +1326,13 @@ ${rawAnalysisResult}`;
                     const nlMatch = part.match(/([\s\S]*?)\n([\s\S]+)/);
                     if (nlMatch) {
                         tempValues.push(nlMatch[1].trim());
-                        processRecord(tempValues, currentTab, dataArray, EXPECTED);
+                        processRecord(tempValues, currentTab, currentSubTab, dataArray, EXPECTED);
                         tempValues = [nlMatch[2].trim()];
                     } else {
                         tempValues.push(part.trim());
                     }
                 } else if (tempValues.length === EXPECTED) {
-                    processRecord(tempValues, currentTab, dataArray, EXPECTED);
+                    processRecord(tempValues, currentTab, currentSubTab, dataArray, EXPECTED);
                     tempValues = [];
                     const c2 = part.trim();
                     if (c2) tempValues.push(c2);
@@ -1278,12 +1341,12 @@ ${rawAnalysisResult}`;
                 }
             }
             if (tempValues.length >= 2) {
-                processRecord(tempValues, currentTab, dataArray, EXPECTED);
+                processRecord(tempValues, currentTab, currentSubTab, dataArray, EXPECTED);
             }
             return dataArray;
         }
 
-        function processRecord(values, currentTab, dataArray, expectedCols) {
+        function processRecord(values, currentTab, currentSubTab, dataArray, expectedCols) {
             let c = values[0];
             if (c && c.includes('\n')) c = c.split('\n').pop().trim(); 
             
@@ -1302,6 +1365,18 @@ ${rawAnalysisResult}`;
             // Impede SMS em branco ou lixo residual
             if (cleanC && cleanS && cleanS.length < 50 && !cleanS.includes('/') && cleanC.toUpperCase() !== 'CLIENTE') {
                 const calculadoAba = (currentTab !== 'Todos') ? currentTab : categorizar((cleanD || "") + " " + (cleanR || ""));
+                
+                // Determina a Sub-Aba de Saúde (caso aplicável)
+                let calculadoSubModulo = "";
+                if (calculadoAba === 'Saúde') {
+                    if (currentSubTab && currentSubTab !== 'Todos') {
+                        calculadoSubModulo = currentSubTab; // Força a sub-aba onde o utilizador fez o upload
+                    } else {
+                        // Tenta adivinhar pelo texto do ficheiro
+                        calculadoSubModulo = categorizarSubSaude((cleanM || "") + " " + (cleanD || "") + " " + (cleanR || ""));
+                    }
+                }
+
                 dataArray.push({
                     cliente: cleanC,
                     sms: cleanS,
@@ -1309,6 +1384,7 @@ ${rawAnalysisResult}`;
                     resumo: cleanR,
                     modulo_sistema: cleanM,
                     modulo: calculadoAba,
+                    sub_modulo: calculadoSubModulo,
                     timestamp: Date.now(),
                     analisada: false
                 });
@@ -1318,6 +1394,12 @@ ${rawAnalysisResult}`;
         // === EVENTOS DA INTERFACE ===
         window.changeTab = (tab) => {
             activeTab = tab;
+            
+            // Se mudou de aba principal e não for Saúde, reseta o estado da sub-aba
+            if (activeTab !== 'Saúde') {
+                activeSubTab = 'Todos';
+            }
+
             document.querySelectorAll('.tab-btn').forEach(b => {
                 b.classList.remove('tab-active');
                 if (b.id === `tab-${tab}`) b.classList.add('tab-active');
@@ -1326,27 +1408,66 @@ ${rawAnalysisResult}`;
             const btnAnalyze = document.getElementById('btnAnalyzeThemes');
             const btnDeleteAll = document.getElementById('btnDeleteAllTab');
             const uploadLabel = document.getElementById('uploadLabel');
+            const subTabsContainer = document.getElementById('subTabsContainer');
+            const defaultBorder = document.getElementById('defaultBorder');
+            
+            // Lógica de exibição das Sub-Abas do Saúde
+            if (activeTab === 'Saúde') {
+                subTabsContainer.classList.remove('hidden');
+                subTabsContainer.classList.add('flex');
+                defaultBorder.classList.add('hidden');
+                
+                // Atualiza visualmente qual sub-aba está ativa (útil se vier de outra aba de volta)
+                document.querySelectorAll('.subtab-btn').forEach(b => {
+                    b.classList.remove('subtab-active');
+                    if (b.id === `subtab-${activeSubTab}`) b.classList.add('subtab-active');
+                });
+            } else {
+                subTabsContainer.classList.add('hidden');
+                subTabsContainer.classList.remove('flex');
+                defaultBorder.classList.remove('hidden');
+            }
             
             if (activeTab === 'Todos') {
                 btnAnalyze.classList.add('hidden');
                 btnAnalyze.classList.remove('flex');
-                
                 btnDeleteAll.classList.add('hidden');
                 btnDeleteAll.classList.remove('flex');
-                
                 uploadLabel.textContent = "Subir ficheiro (Auto-categorizado):";
             } else {
                 btnAnalyze.classList.remove('hidden');
                 btnAnalyze.classList.add('flex');
-                
                 btnDeleteAll.classList.remove('hidden');
                 btnDeleteAll.classList.add('flex');
                 
-                uploadLabel.textContent = `Subir ficheiro para a aba ${activeTab}:`;
+                // Ajusta a label do upload conforme aba e sub-aba
+                if (activeTab === 'Saúde') {
+                    uploadLabel.textContent = activeSubTab === 'Todos' ? `Subir para Saúde (Auto-categorizado):` : `Subir para Saúde ➔ ${activeSubTab}:`;
+                } else {
+                    uploadLabel.textContent = `Subir ficheiro para a aba ${activeTab}:`;
+                }
             }
             
             if (window.renderTable) window.renderTable();
         };
+
+        window.changeSubTab = (subTab) => {
+            activeSubTab = subTab;
+            
+            document.querySelectorAll('.subtab-btn').forEach(b => {
+                b.classList.remove('subtab-active');
+                if (b.id === `subtab-${subTab}`) b.classList.add('subtab-active');
+            });
+            
+            const uploadLabel = document.getElementById('uploadLabel');
+            if (activeSubTab === 'Todos') {
+                uploadLabel.textContent = `Subir para Saúde (Auto-categorizado):`;
+            } else {
+                uploadLabel.textContent = `Subir para Saúde ➔ ${activeSubTab}:`;
+            }
+            
+            if (window.renderTable) window.renderTable();
+        }
 
         function renderTable() {
             if (!tableBody) return;
@@ -1360,6 +1481,11 @@ ${rawAnalysisResult}`;
             let filtered = activeTab !== 'Todos' 
                 ? currentData.filter(i => i.modulo === activeTab) 
                 : currentData;
+
+            // Filtro específico para a sub-aba Saúde
+            if (activeTab === 'Saúde' && activeSubTab !== 'Todos') {
+                filtered = filtered.filter(i => i.sub_modulo === activeSubTab);
+            }
 
             if (clientTerm) {
                 filtered = filtered.filter(i => i.cliente === clientTerm);
@@ -1396,9 +1522,13 @@ ${rawAnalysisResult}`;
                         ? `<span class="text-[9px] px-1.5 py-0.5 rounded bg-green-100 text-green-700 font-bold uppercase tracking-wider ml-2 border border-green-200" title="Esta SMS já fez parte de uma Análise de Temas.">✓ Analisada</span>` 
                         : '';
 
-                    // Adicionada a etiqueta visual para o Módulo de Sistema
                     const moduloSistemaBadge = item.modulo_sistema
                         ? `<span class="text-[10px] px-2 py-0.5 rounded bg-blue-100 text-blue-700 font-bold uppercase tracking-wider border border-blue-200" title="Sistema / Módulo Interno">${item.modulo_sistema}</span>`
+                        : '';
+                        
+                    // Se for Saúde e tiver um sub-módulo, exibe essa etiqueta visual roxa
+                    const subModuloBadge = item.sub_modulo && item.modulo === 'Saúde'
+                        ? `<span class="text-[10px] px-2 py-0.5 rounded bg-purple-100 text-purple-700 font-bold uppercase tracking-wider border border-purple-200" title="Sub-área da Saúde">${item.sub_modulo}</span>`
                         : '';
 
                     tr.innerHTML = `
@@ -1407,6 +1537,7 @@ ${rawAnalysisResult}`;
                             <span class="sms-badge">${item.sms}</span>
                             <div class="mt-2 flex items-center flex-wrap gap-1">
                                 <span class="text-[10px] px-2 py-0.5 rounded bg-slate-200 text-slate-600 font-bold uppercase tracking-wider">${item.modulo}</span>
+                                ${subModuloBadge}
                                 ${moduloSistemaBadge}
                                 ${statusBadge}
                             </div>
@@ -1455,7 +1586,7 @@ ${rawAnalysisResult}`;
             if (!file) return;
             const reader = new FileReader();
             reader.onload = async (ev) => {
-                const data = parseText(ev.target.result, activeTab);
+                const data = parseText(ev.target.result, activeTab, activeSubTab);
                 await uploadData(data);
                 fileInput.value = "";
             };
