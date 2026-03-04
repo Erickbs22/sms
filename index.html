@@ -73,38 +73,63 @@
 
         /* Estilos específicos aplicados apenas na geração do PDF */
         .pdf-export-container {
-            font-family: sans-serif;
+            font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
             color: #334155;
-            padding: 40px;
             background: white;
+            padding: 10px;
         }
 
-        .pdf-export-container h2 {
+        .pdf-h2 {
             color: #1e40af;
-            font-size: 20px;
+            font-size: 18px;
             margin-top: 24px;
             margin-bottom: 12px;
-            border-bottom: 1px solid #e2e8f0;
+            border-bottom: 2px solid #e2e8f0;
             padding-bottom: 8px;
+            page-break-after: avoid;
+            background-color: #f8fafc;
+            padding: 10px 14px;
+            border-radius: 8px;
         }
 
-        .pdf-export-container h3 {
+        .pdf-h3 {
             color: #0f172a;
-            font-size: 16px;
+            font-size: 15px;
             font-weight: bold;
-            margin-top: 16px;
+            margin-top: 18px;
             margin-bottom: 8px;
+            page-break-after: avoid;
         }
 
-        .pdf-export-container p,
-        .pdf-export-container div {
-            font-size: 14px;
+        .pdf-block {
+            font-size: 13px;
             line-height: 1.6;
-            margin-bottom: 8px;
+            margin-bottom: 12px;
+            page-break-inside: avoid;
+            background-color: #ffffff;
+            border-left: 3px solid #cbd5e1;
+            padding-left: 12px;
+            padding-top: 4px;
+            padding-bottom: 4px;
+        }
+
+        .pdf-block p {
+            margin: 0;
         }
 
         .pdf-export-container strong {
-            color: #000;
+            color: #0f172a;
+            font-weight: 700;
+        }
+
+        .pdf-highlight {
+            color: #b91c1c;
+            font-weight: bold;
+            background-color: #fef2f2;
+            padding: 2px 6px;
+            border-radius: 4px;
+            display: inline-block;
+            margin-bottom: 4px;
         }
     </style>
 </head>
@@ -1110,20 +1135,28 @@ service cloud.firestore {
             const container = document.createElement('div');
             container.className = "pdf-export-container";
             container.innerHTML = `
-                <h1 style="color: #0f172a; font-size: 24px; border-bottom: 2px solid #e2e8f0; padding-bottom: 10px; margin-bottom: 20px;">
-                    Relatório de Análise: ${filenameHeader.toUpperCase().replace('_', ' - ')}
-                </h1>
-                <p style="font-size: 12px; color: #64748b; margin-bottom: 30px;">Gerado no Painel de SMS Cloud em: ${new Date().toLocaleString()}</p>
-                ${contentHtml}
+                <div style="text-align: center; margin-bottom: 30px; border-bottom: 2px solid #e2e8f0; padding-bottom: 20px;">
+                    <h1 style="color: #0f172a; font-size: 26px; font-weight: 800; margin: 0 0 10px 0; text-transform: uppercase;">
+                        Relatório de Análise
+                    </h1>
+                    <h2 style="color: #3b82f6; font-size: 16px; font-weight: 600; margin: 0; letter-spacing: 1px;">
+                        MÓDULO: ${filenameHeader.toUpperCase().replace('_', ' - ')}
+                    </h2>
+                    <p style="font-size: 12px; color: #64748b; margin-top: 15px;">Gerado no Painel de SMS Cloud em: ${new Date().toLocaleString()}</p>
+                </div>
+                <div class="pdf-content">
+                    ${contentHtml}
+                </div>
             `;
 
             const dateStr = new Date().toISOString().split('T')[0];
             const opt = {
-                margin: 15,
+                margin: [15, 15, 20, 15],
                 filename: `Analise_${filenameHeader}_${dateStr}.pdf`,
                 image: { type: 'jpeg', quality: 0.98 },
                 html2canvas: { scale: 2, useCORS: true },
-                jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+                jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' },
+                pagebreak: { mode: ['css', 'legacy'] }
             };
 
             try {
@@ -1136,18 +1169,38 @@ service cloud.firestore {
             }
         }
 
+        function formatTextForPDF(text) {
+            if (!text) return "";
+            let htmlFormat = text;
+
+            htmlFormat = htmlFormat.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+            htmlFormat = htmlFormat.replace(/\*(.*?)\*/g, '<em>$1</em>');
+
+            let paragraphs = htmlFormat.split(/\n\s*\n/);
+            htmlFormat = paragraphs.map(p => {
+                p = p.trim();
+                if (!p) return '';
+
+                if (p.startsWith('## ')) {
+                    return `<h2 class="pdf-h2">${p.replace(/^##\s*/, '')}</h2>`;
+                } else if (p.startsWith('### ')) {
+                    return `<h3 class="pdf-h3">${p.replace(/^###\s*/, '')}</h3>`;
+                } else {
+                    let pContent = p.replace(/\n/g, '<br>');
+                    // Highlight the SMS line
+                    pContent = pContent.replace(/\*?\s*(SMS afetados?:?)/ig, '<br><br><span class="pdf-highlight">$1</span>');
+                    return `<div class="pdf-block"><p>${pContent}</p></div>`;
+                }
+            }).join('');
+
+            return htmlFormat;
+        }
+
         window.downloadSpecificAnalysisPDF = (id) => {
             const analysis = savedAnalyses.find(a => a.id === id);
             if (!analysis) return;
 
-            let htmlFormat = analysis.conteudo;
-            htmlFormat = htmlFormat.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
-            htmlFormat = htmlFormat.replace(/\*(.*?)\*/g, '<em>$1</em>');
-            htmlFormat = htmlFormat.replace(/### (.*?)(?:\n|$)/g, '<h3>$1</h3>');
-            htmlFormat = htmlFormat.replace(/## (.*?)(?:\n|$)/g, '<h2>$1</h2>');
-            htmlFormat = htmlFormat.replace(/\n\n/g, '<br><br>');
-            htmlFormat = htmlFormat.replace(/\n/g, '<br>');
-
+            let htmlFormat = formatTextForPDF(analysis.conteudo);
             generatePDF(htmlFormat, analysis.modulo);
         };
 
@@ -1159,14 +1212,7 @@ service cloud.firestore {
 
             const targetName = activeTab === 'Saúde' && activeSubTab !== 'Todos' ? `SAÚDE_${activeSubTab}` : activeTab;
 
-            let htmlFormat = rawAnalysisResult;
-            htmlFormat = htmlFormat.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
-            htmlFormat = htmlFormat.replace(/\*(.*?)\*/g, '<em>$1</em>');
-            htmlFormat = htmlFormat.replace(/### (.*?)(?:\n|$)/g, '<h3>$1</h3>');
-            htmlFormat = htmlFormat.replace(/## (.*?)(?:\n|$)/g, '<h2>$1</h2>');
-            htmlFormat = htmlFormat.replace(/\n\n/g, '<br><br>');
-            htmlFormat = htmlFormat.replace(/\n/g, '<br>');
-
+            let htmlFormat = formatTextForPDF(rawAnalysisResult);
             generatePDF(htmlFormat, targetName);
         };
 
