@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="pt-br">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -13,6 +14,7 @@
             word-wrap: break-word;
             word-break: break-word;
         }
+
         .sms-badge {
             font-family: monospace;
             background-color: #eff6ff;
@@ -22,42 +24,53 @@
             font-weight: 600;
             word-break: break-all;
         }
+
         .tab-active {
             border-bottom: 3px solid #1d4ed8;
             color: #1d4ed8;
             font-weight: bold;
         }
+
         .subtab-active {
             background-color: #f1f5f9;
             color: #0f172a;
             font-weight: bold;
             border-radius: 8px;
         }
+
         .loading-overlay {
             display: none;
             position: fixed;
-            top: 0; left: 0; width: 100%; height: 100%;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
             background: rgba(255, 255, 255, 0.8);
             z-index: 9999;
             align-items: center;
             justify-content: center;
         }
+
         .custom-scroll::-webkit-scrollbar {
             width: 6px;
             height: 6px;
         }
+
         .custom-scroll::-webkit-scrollbar-thumb {
             background: #cbd5e1;
             border-radius: 10px;
         }
+
         input[type="date"]::-webkit-calendar-picker-indicator {
             cursor: pointer;
             opacity: 0.6;
             transition: 0.2s;
         }
+
         input[type="date"]::-webkit-calendar-picker-indicator:hover {
             opacity: 1;
         }
+
         /* Estilos específicos aplicados apenas na geração do PDF */
         .pdf-export-container {
             font-family: sans-serif;
@@ -65,6 +78,7 @@
             padding: 40px;
             background: white;
         }
+
         .pdf-export-container h2 {
             color: #1e40af;
             font-size: 20px;
@@ -73,6 +87,7 @@
             border-bottom: 1px solid #e2e8f0;
             padding-bottom: 8px;
         }
+
         .pdf-export-container h3 {
             color: #0f172a;
             font-size: 16px;
@@ -80,17 +95,51 @@
             margin-top: 16px;
             margin-bottom: 8px;
         }
-        .pdf-export-container p, .pdf-export-container div {
+
+        .pdf-export-container p,
+        .pdf-export-container div {
             font-size: 14px;
             line-height: 1.6;
             margin-bottom: 8px;
         }
+
         .pdf-export-container strong {
             color: #000;
         }
     </style>
 </head>
+
 <body class="bg-slate-50 min-h-screen p-2 md:p-6 text-slate-900">
+    <!-- Login Overlay -->
+    <div id="loginOverlay" class="fixed inset-0 bg-slate-100 z-[5000] flex items-center justify-center p-4">
+        <div class="bg-white rounded-2xl shadow-2xl p-8 max-w-md w-full">
+            <div class="text-center mb-8">
+                <h2 class="text-3xl font-extrabold text-slate-800">Login</h2>
+                <p class="text-slate-500 mt-2">Acesso restrito ao Painel de SMS Cloud</p>
+            </div>
+            <form id="loginForm" class="space-y-6">
+                <div>
+                    <label class="block text-sm font-medium text-slate-700 mb-1">E-mail</label>
+                    <input type="email" id="emailInput" required
+                        class="w-full px-4 py-3 border border-slate-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-slate-700 mb-1">Senha</label>
+                    <input type="password" id="passwordInput" required
+                        class="w-full px-4 py-3 border border-slate-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all">
+                </div>
+                <!-- Error Message -->
+                <div id="loginError" class="hidden text-sm text-red-600 bg-red-50 p-3 rounded-lg border border-red-200">
+                </div>
+
+                <button type="submit" id="loginBtn"
+                    class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-4 rounded-xl shadow-lg transition-all flex justify-center items-center">
+                    Entrar
+                </button>
+            </form>
+        </div>
+    </div>
+
     <!-- Overlay de Carregamento -->
     <div id="loader" class="loading-overlay">
         <div class="flex flex-col items-center">
@@ -100,23 +149,31 @@
     </div>
 
     <!-- Modal de Erro de Permissões (Regras Firestore) -->
-    <div id="permissionsErrorModal" class="hidden fixed inset-0 bg-slate-900 bg-opacity-80 z-[4000] flex items-center justify-center p-4">
-        <div class="bg-white rounded-2xl shadow-2xl p-6 md:p-8 max-w-2xl w-full mx-auto max-h-[90vh] overflow-y-auto custom-scroll">
+    <div id="permissionsErrorModal"
+        class="hidden fixed inset-0 bg-slate-900 bg-opacity-80 z-[4000] flex items-center justify-center p-4">
+        <div
+            class="bg-white rounded-2xl shadow-2xl p-6 md:p-8 max-w-2xl w-full mx-auto max-h-[90vh] overflow-y-auto custom-scroll">
             <div class="flex items-center gap-3 mb-4 text-amber-600">
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 flex-shrink-0" fill="none" viewBox="0 0 24 24"
+                    stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                        d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
                 </svg>
                 <h2 class="text-2xl font-bold text-slate-800">Atenção: Acesso Negado no Firebase!</h2>
             </div>
             <p class="text-slate-600 mb-4 text-sm leading-relaxed">
-                O erro <strong>"Missing or insufficient permissions"</strong> que viu na consola significa que a aplicação conseguiu encontrar o seu projeto, mas <strong>o seu próprio Firebase está a bloquear a entrada</strong> por segurança.
+                O erro <strong>"Missing or insufficient permissions"</strong> que viu na consola significa que a
+                aplicação conseguiu encontrar o seu projeto, mas <strong>o seu próprio Firebase está a bloquear a
+                    entrada</strong> por segurança.
             </p>
             <p class="text-slate-600 mb-4 text-sm leading-relaxed">
-                Enquanto não corrigir as regras, a aplicação irá funcionar em <strong>Modo Local</strong> (os dados não vão para a nuvem). Para ativar a nuvem, siga estes passos:
+                Enquanto não corrigir as regras, a aplicação irá funcionar em <strong>Modo Local</strong> (os dados não
+                vão para a nuvem). Para ativar a nuvem, siga estes passos:
             </p>
-            
+
             <ol class="list-decimal list-inside text-sm text-slate-700 space-y-2 mb-4 ml-2 font-medium">
-                <li>Aceda ao <a href="https://console.firebase.google.com/" target="_blank" class="text-blue-600 underline">Console do Firebase</a>.</li>
+                <li>Aceda ao <a href="https://console.firebase.google.com/" target="_blank"
+                        class="text-blue-600 underline">Console do Firebase</a>.</li>
                 <li>Vá a <strong>Firestore Database</strong> > aba <strong>Regras (Rules)</strong>.</li>
                 <li>Substitua o código existente por este e clique em <strong>Publicar</strong>:</li>
             </ol>
@@ -133,10 +190,12 @@ service cloud.firestore {
             </div>
 
             <div class="flex flex-col sm:flex-row justify-end gap-3 mt-6 border-t pt-6 border-slate-200">
-                <button onclick="document.getElementById('permissionsErrorModal').classList.add('hidden')" class="w-full sm:w-auto px-6 py-3 text-slate-600 hover:bg-slate-100 font-bold rounded-xl transition-colors text-sm">
+                <button onclick="document.getElementById('permissionsErrorModal').classList.add('hidden')"
+                    class="w-full sm:w-auto px-6 py-3 text-slate-600 hover:bg-slate-100 font-bold rounded-xl transition-colors text-sm">
                     Continuar em Modo Local
                 </button>
-                <button onclick="window.location.reload()" class="w-full sm:w-auto bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-6 rounded-xl transition-all shadow-lg text-sm">
+                <button onclick="window.location.reload()"
+                    class="w-full sm:w-auto bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-6 rounded-xl transition-all shadow-lg text-sm">
                     Já atualizei as Regras!
                 </button>
             </div>
@@ -144,35 +203,48 @@ service cloud.firestore {
     </div>
 
     <!-- Modal de Confirmação de Exclusão Individual -->
-    <div id="deleteModal" class="hidden fixed inset-0 bg-slate-900 bg-opacity-50 z-[2000] flex items-center justify-center p-4">
+    <div id="deleteModal"
+        class="hidden fixed inset-0 bg-slate-900 bg-opacity-50 z-[2000] flex items-center justify-center p-4">
         <div class="bg-white rounded-xl shadow-2xl p-6 max-w-sm w-full mx-auto">
             <div class="flex items-center gap-3 mb-4 text-red-600">
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24"
+                    stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                        d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
                 </svg>
                 <h3 class="text-lg font-bold text-slate-800">Excluir SMS</h3>
             </div>
-            <p class="text-slate-600 mb-6 text-sm">Tem a certeza que deseja excluir o SMS <span id="deleteSmsIdText" class="font-bold text-slate-800"></span>? Esta ação não pode ser desfeita.</p>
+            <p class="text-slate-600 mb-6 text-sm">Tem a certeza que deseja excluir o SMS <span id="deleteSmsIdText"
+                    class="font-bold text-slate-800"></span>? Esta ação não pode ser desfeita.</p>
             <div class="flex justify-end gap-3">
-                <button onclick="closeDeleteModal()" class="px-4 py-2 text-sm text-slate-600 hover:bg-slate-100 font-medium rounded-lg transition-colors">Cancelar</button>
-                <button onclick="confirmDelete()" class="px-4 py-2 bg-red-600 hover:bg-red-700 text-white text-sm font-bold rounded-lg transition-colors">Sim, Excluir</button>
+                <button onclick="closeDeleteModal()"
+                    class="px-4 py-2 text-sm text-slate-600 hover:bg-slate-100 font-medium rounded-lg transition-colors">Cancelar</button>
+                <button onclick="confirmDelete()"
+                    class="px-4 py-2 bg-red-600 hover:bg-red-700 text-white text-sm font-bold rounded-lg transition-colors">Sim,
+                    Excluir</button>
             </div>
         </div>
     </div>
 
     <!-- Modal de Confirmação de Exclusão de Análise -->
-    <div id="deleteAnalysisModal" class="hidden fixed inset-0 bg-slate-900 bg-opacity-50 z-[4000] flex items-center justify-center p-4">
+    <div id="deleteAnalysisModal"
+        class="hidden fixed inset-0 bg-slate-900 bg-opacity-50 z-[4000] flex items-center justify-center p-4">
         <div class="bg-white rounded-xl shadow-2xl p-6 max-w-sm w-full mx-auto border-t-4 border-red-600">
             <div class="flex items-center gap-3 mb-4 text-red-600">
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8" fill="none" viewBox="0 0 24 24"
+                    stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                        d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
                 </svg>
                 <h3 class="text-xl font-bold text-slate-800">Excluir Análise</h3>
             </div>
-            <p class="text-slate-600 mb-6 text-sm">Tem a certeza que deseja <strong>excluir permanentemente</strong> este relatório de análise do histórico?</p>
+            <p class="text-slate-600 mb-6 text-sm">Tem a certeza que deseja <strong>excluir permanentemente</strong>
+                este relatório de análise do histórico?</p>
             <div class="flex justify-end gap-3">
-                <button onclick="closeDeleteAnalysisModal()" class="px-5 py-3 text-sm text-slate-600 hover:bg-slate-100 font-bold rounded-xl transition-colors">Cancelar</button>
-                <button onclick="executeDeleteAnalysis()" class="px-5 py-3 bg-red-600 hover:bg-red-700 text-white text-sm font-bold rounded-xl transition-colors shadow-lg flex items-center gap-2">
+                <button onclick="closeDeleteAnalysisModal()"
+                    class="px-5 py-3 text-sm text-slate-600 hover:bg-slate-100 font-bold rounded-xl transition-colors">Cancelar</button>
+                <button onclick="executeDeleteAnalysis()"
+                    class="px-5 py-3 bg-red-600 hover:bg-red-700 text-white text-sm font-bold rounded-xl transition-colors shadow-lg flex items-center gap-2">
                     Sim, Excluir
                 </button>
             </div>
@@ -180,19 +252,27 @@ service cloud.firestore {
     </div>
 
     <!-- Modal de Confirmação de Exclusão de Toda a Aba -->
-    <div id="deleteAllModal" class="hidden fixed inset-0 bg-slate-900 bg-opacity-50 z-[2000] flex items-center justify-center p-4">
+    <div id="deleteAllModal"
+        class="hidden fixed inset-0 bg-slate-900 bg-opacity-50 z-[2000] flex items-center justify-center p-4">
         <div class="bg-white rounded-xl shadow-2xl p-6 max-w-md w-full mx-auto border-t-4 border-red-600">
             <div class="flex items-center gap-3 mb-4 text-red-600">
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8" fill="none" viewBox="0 0 24 24"
+                    stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                        d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
                 </svg>
                 <h3 class="text-xl font-bold text-slate-800">Apagar Aba Completa</h3>
             </div>
-            <p class="text-slate-600 mb-2 text-sm">Tem a certeza que deseja excluir <strong>TODAS as <span id="deleteAllCountText" class="text-red-600 font-bold"></span> registos</strong> da aba <strong id="deleteAllTabText"></strong>?</p>
-            <p class="text-slate-500 mb-6 text-xs italic">Atenção: Esta ação é definitiva e removerá todos estes registos do banco de dados.</p>
+            <p class="text-slate-600 mb-2 text-sm">Tem a certeza que deseja excluir <strong>TODAS as <span
+                        id="deleteAllCountText" class="text-red-600 font-bold"></span> registos</strong> da aba <strong
+                    id="deleteAllTabText"></strong>?</p>
+            <p class="text-slate-500 mb-6 text-xs italic">Atenção: Esta ação é definitiva e removerá todos estes
+                registos do banco de dados.</p>
             <div class="flex justify-end gap-3">
-                <button onclick="closeDeleteAllModal()" class="px-5 py-3 text-sm text-slate-600 hover:bg-slate-100 font-bold rounded-xl transition-colors">Cancelar</button>
-                <button onclick="confirmDeleteAll()" class="px-5 py-3 bg-red-600 hover:bg-red-700 text-white text-sm font-bold rounded-xl transition-colors shadow-lg flex items-center gap-2">
+                <button onclick="closeDeleteAllModal()"
+                    class="px-5 py-3 text-sm text-slate-600 hover:bg-slate-100 font-bold rounded-xl transition-colors">Cancelar</button>
+                <button onclick="confirmDeleteAll()"
+                    class="px-5 py-3 bg-red-600 hover:bg-red-700 text-white text-sm font-bold rounded-xl transition-colors shadow-lg flex items-center gap-2">
                     Sim, Apagar Tudo
                 </button>
             </div>
@@ -200,7 +280,8 @@ service cloud.firestore {
     </div>
 
     <!-- Modal de Análise de Similaridade -->
-    <div id="similarityModal" class="hidden fixed inset-0 bg-slate-900 bg-opacity-50 z-[2000] flex items-center justify-center p-4">
+    <div id="similarityModal"
+        class="hidden fixed inset-0 bg-slate-900 bg-opacity-50 z-[2000] flex items-center justify-center p-4">
         <div class="bg-white rounded-xl shadow-2xl p-6 md:p-8 max-w-5xl w-full mx-auto max-h-[90vh] flex flex-col">
             <div class="flex items-center justify-between mb-2">
                 <div class="flex items-center gap-3 text-indigo-600">
@@ -208,59 +289,89 @@ service cloud.firestore {
                     <h3 class="text-xl font-bold text-slate-800">Análise de Temas por IA</h3>
                 </div>
                 <button onclick="closeSimilarityModal()" class="text-slate-400 hover:text-slate-600 transition-colors">
-                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12">
+                        </path>
+                    </svg>
                 </button>
             </div>
-            <div id="similarityDescText" class="text-slate-500 mb-6 text-sm border-b pb-4">Agrupamento inteligente dos SMS baseando-se no módulo e contexto.</div>
-            <div id="similarityContent" class="overflow-y-auto custom-scroll flex-1 bg-slate-50 p-6 rounded-xl border border-slate-200 text-sm text-slate-700 whitespace-pre-wrap leading-relaxed shadow-inner">
+            <div id="similarityDescText" class="text-slate-500 mb-6 text-sm border-b pb-4">Agrupamento inteligente dos
+                SMS baseando-se no módulo e contexto.</div>
+            <div id="similarityContent"
+                class="overflow-y-auto custom-scroll flex-1 bg-slate-50 p-6 rounded-xl border border-slate-200 text-sm text-slate-700 whitespace-pre-wrap leading-relaxed shadow-inner">
                 <!-- Conteúdo gerado pela IA aparecerá aqui -->
             </div>
             <div class="mt-6 flex flex-wrap justify-end gap-3">
-                <button onclick="exportLiveAnalysisToPDF()" title="Exportar relatório em PDF" class="px-5 py-3 bg-slate-200 hover:bg-slate-300 text-slate-700 text-sm font-bold rounded-xl transition-colors shadow-sm flex items-center gap-2">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-red-600" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M4 4a2 2 0 012-2h4.586A2 2 0 0112 2.586L15.414 6A2 2 0 0116 7.414V16a2 2 0 01-2 2H6a2 2 0 01-2-2V4zm2 6a1 1 0 011-1h6a1 1 0 110 2H7a1 1 0 01-1-1zm1 3a1 1 0 100 2h6a1 1 0 100-2H7z" clip-rule="evenodd" /></svg>
+                <button onclick="exportLiveAnalysisToPDF()" title="Exportar relatório em PDF"
+                    class="px-5 py-3 bg-slate-200 hover:bg-slate-300 text-slate-700 text-sm font-bold rounded-xl transition-colors shadow-sm flex items-center gap-2">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-red-600" viewBox="0 0 20 20"
+                        fill="currentColor">
+                        <path fill-rule="evenodd"
+                            d="M4 4a2 2 0 012-2h4.586A2 2 0 0112 2.586L15.414 6A2 2 0 0116 7.414V16a2 2 0 01-2 2H6a2 2 0 01-2-2V4zm2 6a1 1 0 011-1h6a1 1 0 110 2H7a1 1 0 01-1-1zm1 3a1 1 0 100 2h6a1 1 0 100-2H7z"
+                            clip-rule="evenodd" />
+                    </svg>
                     Exportar PDF
                 </button>
-                <button id="btnConsolidar" onclick="consolidateAnalysis()" title="Juntar temas repetidos de lotes diferentes" class="hidden items-center gap-2 px-5 py-3 bg-fuchsia-600 hover:bg-fuchsia-700 text-white text-sm font-bold rounded-xl transition-colors shadow-md">
+                <button id="btnConsolidar" onclick="consolidateAnalysis()"
+                    title="Juntar temas repetidos de lotes diferentes"
+                    class="hidden items-center gap-2 px-5 py-3 bg-fuchsia-600 hover:bg-fuchsia-700 text-white text-sm font-bold rounded-xl transition-colors shadow-md">
                     <span class="text-xl">🪄</span> Consolidar Lotes
                 </button>
-                <button id="btnSaveAnalysis" onclick="saveAnalysisAndMark()" title="Guardar histórico e marcar SMS como lidas" class="flex items-center gap-2 px-5 py-3 bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-bold rounded-xl transition-colors shadow-md">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd" /></svg>
+                <button id="btnSaveAnalysis" onclick="saveAnalysisAndMark()"
+                    title="Guardar histórico e marcar SMS como lidas"
+                    class="flex items-center gap-2 px-5 py-3 bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-bold rounded-xl transition-colors shadow-md">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                        <path fill-rule="evenodd"
+                            d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
+                            clip-rule="evenodd" />
+                    </svg>
                     Guardar & Marcar
                 </button>
-                <button onclick="closeSimilarityModal()" class="px-6 py-3 bg-slate-800 hover:bg-slate-900 text-white text-sm font-bold rounded-xl transition-colors shadow-md">Fechar</button>
+                <button onclick="closeSimilarityModal()"
+                    class="px-6 py-3 bg-slate-800 hover:bg-slate-900 text-white text-sm font-bold rounded-xl transition-colors shadow-md">Fechar</button>
             </div>
         </div>
     </div>
 
     <!-- Modal de Histórico de Análises -->
-    <div id="historyModal" class="hidden fixed inset-0 bg-slate-900 bg-opacity-70 z-[3000] flex items-center justify-center p-4">
+    <div id="historyModal"
+        class="hidden fixed inset-0 bg-slate-900 bg-opacity-70 z-[3000] flex items-center justify-center p-4">
         <div class="bg-white rounded-xl shadow-2xl w-full max-w-4xl mx-auto h-[85vh] flex flex-col overflow-hidden">
             <div class="p-6 border-b border-slate-200 flex items-center justify-between bg-slate-50">
                 <div class="flex items-center gap-3 text-slate-800">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                        <path stroke-linecap="round" stroke-linejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-blue-600" fill="none"
+                        viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                        <path stroke-linecap="round" stroke-linejoin="round"
+                            d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
                     </svg>
                     <h3 class="text-xl font-bold">Histórico de Análises</h3>
                 </div>
                 <button onclick="closeHistoryModal()" class="text-slate-400 hover:text-slate-600 transition-colors">
-                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12">
+                        </path>
+                    </svg>
                 </button>
             </div>
-            
+
             <div class="flex-1 flex overflow-hidden">
                 <!-- Lista lateral de análises -->
-                <div class="w-1/3 border-r border-slate-200 bg-white overflow-y-auto custom-scroll p-4 space-y-2" id="historyListContainer">
+                <div class="w-1/3 border-r border-slate-200 bg-white overflow-y-auto custom-scroll p-4 space-y-2"
+                    id="historyListContainer">
                     <!-- Preenchido via JS -->
                 </div>
-                
+
                 <!-- Visualização do conteúdo da análise -->
                 <div class="w-2/3 bg-slate-50 p-6 overflow-y-auto custom-scroll">
-                    <div id="historyContentArea" class="text-sm text-slate-700 whitespace-pre-wrap leading-relaxed hidden">
+                    <div id="historyContentArea"
+                        class="text-sm text-slate-700 whitespace-pre-wrap leading-relaxed hidden">
                         <!-- Conteúdo Markdown convertido para HTML entra aqui -->
                     </div>
                     <div id="historyEmptyState" class="h-full flex flex-col items-center justify-center text-slate-400">
-                        <svg xmlns="http://www.w3.org/2000/svg" class="h-16 w-16 mb-4 opacity-50" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-16 w-16 mb-4 opacity-50" fill="none"
+                            viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                         </svg>
                         <p>Selecione uma análise ao lado para visualizar.</p>
                     </div>
@@ -270,7 +381,8 @@ service cloud.firestore {
     </div>
 
     <!-- Modal de Plano de Ação e Resposta (IA) -->
-    <div id="actionPlanModal" class="hidden fixed inset-0 bg-slate-900 bg-opacity-50 z-[2000] flex items-center justify-center p-4">
+    <div id="actionPlanModal"
+        class="hidden fixed inset-0 bg-slate-900 bg-opacity-50 z-[2000] flex items-center justify-center p-4">
         <div class="bg-white rounded-xl shadow-2xl p-6 md:p-8 max-w-3xl w-full mx-auto max-h-[90vh] flex flex-col">
             <div class="flex items-center justify-between mb-2">
                 <div class="flex items-center gap-3 text-emerald-600">
@@ -278,15 +390,21 @@ service cloud.firestore {
                     <h3 class="text-xl font-bold text-slate-800">Plano de Ação & Resposta</h3>
                 </div>
                 <button onclick="closeActionPlanModal()" class="text-slate-400 hover:text-slate-600 transition-colors">
-                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12">
+                        </path>
+                    </svg>
                 </button>
             </div>
-            <div class="text-slate-500 mb-6 text-sm border-b pb-4">Análise de urgência, passos para resolução técnica e rascunho de e-mail para o cliente.</div>
-            <div id="actionPlanContent" class="overflow-y-auto custom-scroll flex-1 bg-slate-50 p-6 rounded-xl border border-slate-200 text-sm text-slate-700 whitespace-pre-wrap leading-relaxed shadow-inner">
+            <div class="text-slate-500 mb-6 text-sm border-b pb-4">Análise de urgência, passos para resolução técnica e
+                rascunho de e-mail para o cliente.</div>
+            <div id="actionPlanContent"
+                class="overflow-y-auto custom-scroll flex-1 bg-slate-50 p-6 rounded-xl border border-slate-200 text-sm text-slate-700 whitespace-pre-wrap leading-relaxed shadow-inner">
                 <!-- Conteúdo gerado pela IA aparecerá aqui -->
             </div>
             <div class="mt-6 flex justify-end">
-                <button onclick="closeActionPlanModal()" class="px-6 py-3 bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-bold rounded-xl transition-colors shadow-md">Concluir</button>
+                <button onclick="closeActionPlanModal()"
+                    class="px-6 py-3 bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-bold rounded-xl transition-colors shadow-md">Concluir</button>
             </div>
         </div>
     </div>
@@ -296,47 +414,76 @@ service cloud.firestore {
             <div>
                 <h1 class="text-3xl font-extrabold text-slate-800 tracking-tight">Painel de SMS Cloud</h1>
                 <p class="text-slate-500 mt-1">Gestão de demandas, previsões e estado.</p>
-                <span id="localModeWarning" class="hidden mt-2 inline-flex items-center gap-1 px-3 py-1 rounded-full bg-amber-100 text-amber-700 text-xs font-bold">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd" /></svg>
+                <span id="localModeWarning"
+                    class="hidden mt-2 inline-flex items-center gap-1 px-3 py-1 rounded-full bg-amber-100 text-amber-700 text-xs font-bold">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
+                        <path fill-rule="evenodd"
+                            d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z"
+                            clip-rule="evenodd" />
+                    </svg>
                     Modo Local: Regras do Firebase não configuradas. Os dados não serão salvos na nuvem.
                 </span>
             </div>
-            
+
             <div class="flex items-center gap-3">
-                <button onclick="openHistoryModal()" class="bg-white hover:bg-slate-50 text-slate-700 border border-slate-200 px-4 py-2 rounded-xl shadow-sm text-sm font-bold flex items-center gap-2 transition-colors">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                <button onclick="logout()"
+                    class="text-sm font-bold text-slate-500 hover:text-red-600 transition-colors mr-2">Sair</button>
+                <button onclick="openHistoryModal()"
+                    class="bg-white hover:bg-slate-50 text-slate-700 border border-slate-200 px-4 py-2 rounded-xl shadow-sm text-sm font-bold flex items-center gap-2 transition-colors">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-blue-600" fill="none"
+                        viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
                     </svg>
                     Histórico de Análises
                 </button>
                 <div class="flex items-center gap-3 bg-white p-2 md:p-3 rounded-xl shadow-sm border border-slate-200">
-                    <label id="uploadLabel" class="text-sm font-medium text-slate-600 hidden md:block">Subir ficheiro (Auto-categorizado):</label>
-                    <input type="file" id="fileInput" accept=".txt" class="text-sm text-slate-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100 cursor-pointer w-48 md:w-auto">
+                    <label id="uploadLabel" class="text-sm font-medium text-slate-600 hidden md:block">Subir ficheiro
+                        (Auto-categorizado):</label>
+                    <input type="file" id="fileInput" accept=".txt"
+                        class="text-sm text-slate-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100 cursor-pointer w-48 md:w-auto">
                 </div>
             </div>
         </header>
 
         <!-- Navegação por Abas Principais -->
         <div class="flex flex-wrap gap-2 mb-2 overflow-x-auto custom-scroll">
-            <button onclick="changeTab('ERP')" id="tab-ERP" class="px-6 py-3 text-slate-500 hover:text-blue-600 transition-all tab-btn">ERP</button>
-            <button onclick="changeTab('RH')" id="tab-RH" class="px-6 py-3 text-slate-500 hover:text-blue-600 transition-all tab-btn">RH</button>
-            <button onclick="changeTab('Logística')" id="tab-Logística" class="px-6 py-3 text-slate-500 hover:text-blue-600 transition-all tab-btn">Logística</button>
-            <button onclick="changeTab('Jurídico')" id="tab-Jurídico" class="px-6 py-3 text-slate-500 hover:text-blue-600 transition-all tab-btn">Jurídico</button>
-            <button onclick="changeTab('Saúde')" id="tab-Saúde" class="px-6 py-3 text-slate-500 hover:text-blue-600 transition-all tab-btn">Saúde</button>
-            <button onclick="changeTab('Todos')" id="tab-Todos" class="px-6 py-3 text-slate-500 hover:text-blue-600 transition-all tab-btn tab-active">Todos</button>
+            <button onclick="changeTab('ERP')" id="tab-ERP"
+                class="px-6 py-3 text-slate-500 hover:text-blue-600 transition-all tab-btn">ERP</button>
+            <button onclick="changeTab('RH')" id="tab-RH"
+                class="px-6 py-3 text-slate-500 hover:text-blue-600 transition-all tab-btn">RH</button>
+            <button onclick="changeTab('Logística')" id="tab-Logística"
+                class="px-6 py-3 text-slate-500 hover:text-blue-600 transition-all tab-btn">Logística</button>
+            <button onclick="changeTab('Jurídico')" id="tab-Jurídico"
+                class="px-6 py-3 text-slate-500 hover:text-blue-600 transition-all tab-btn">Jurídico</button>
+            <button onclick="changeTab('Saúde')" id="tab-Saúde"
+                class="px-6 py-3 text-slate-500 hover:text-blue-600 transition-all tab-btn">Saúde</button>
+            <button onclick="changeTab('Todos')" id="tab-Todos"
+                class="px-6 py-3 text-slate-500 hover:text-blue-600 transition-all tab-btn tab-active">Todos</button>
         </div>
 
         <!-- Navegação de Sub-Abas (Específico para Saúde) -->
-        <div id="subTabsContainer" class="hidden flex-wrap gap-2 mb-6 pb-2 border-b border-slate-200 overflow-x-auto custom-scroll">
-            <button onclick="changeSubTab('Todos')" id="subtab-Todos" class="px-4 py-1.5 text-sm text-slate-500 hover:text-blue-600 transition-all subtab-btn subtab-active">Toda a Saúde</button>
-            <button onclick="changeSubTab('AG')" id="subtab-AG" class="px-4 py-1.5 text-sm text-slate-500 hover:text-blue-600 transition-all subtab-btn">AG</button>
-            <button onclick="changeSubTab('MG')" id="subtab-MG" class="px-4 py-1.5 text-sm text-slate-500 hover:text-blue-600 transition-all subtab-btn">MG</button>
-            <button onclick="changeSubTab('Moderna')" id="subtab-Moderna" class="px-4 py-1.5 text-sm text-slate-500 hover:text-blue-600 transition-all subtab-btn">Moderna</button>
-            <button onclick="changeSubTab('Otto')" id="subtab-Otto" class="px-4 py-1.5 text-sm text-slate-500 hover:text-blue-600 transition-all subtab-btn">Otto</button>
-            <button onclick="changeSubTab('Nexorede')" id="subtab-Nexorede" class="px-4 py-1.5 text-sm text-slate-500 hover:text-blue-600 transition-all subtab-btn">Nexorede</button>
-            <button onclick="changeSubTab('Conecta')" id="subtab-Conecta" class="px-4 py-1.5 text-sm text-slate-500 hover:text-blue-600 transition-all subtab-btn">Conecta</button>
-            <button onclick="changeSubTab('Lean')" id="subtab-Lean" class="px-4 py-1.5 text-sm text-slate-500 hover:text-blue-600 transition-all subtab-btn">Lean</button>
-            <button onclick="changeSubTab('Outros')" id="subtab-Outros" class="px-4 py-1.5 text-sm text-slate-500 hover:text-blue-600 transition-all subtab-btn">Outros</button>
+        <div id="subTabsContainer"
+            class="hidden flex-wrap gap-2 mb-6 pb-2 border-b border-slate-200 overflow-x-auto custom-scroll">
+            <button onclick="changeSubTab('Todos')" id="subtab-Todos"
+                class="px-4 py-1.5 text-sm text-slate-500 hover:text-blue-600 transition-all subtab-btn subtab-active">Toda
+                a Saúde</button>
+            <button onclick="changeSubTab('AG')" id="subtab-AG"
+                class="px-4 py-1.5 text-sm text-slate-500 hover:text-blue-600 transition-all subtab-btn">AG</button>
+            <button onclick="changeSubTab('MG')" id="subtab-MG"
+                class="px-4 py-1.5 text-sm text-slate-500 hover:text-blue-600 transition-all subtab-btn">MG</button>
+            <button onclick="changeSubTab('Moderna')" id="subtab-Moderna"
+                class="px-4 py-1.5 text-sm text-slate-500 hover:text-blue-600 transition-all subtab-btn">Moderna</button>
+            <button onclick="changeSubTab('Otto')" id="subtab-Otto"
+                class="px-4 py-1.5 text-sm text-slate-500 hover:text-blue-600 transition-all subtab-btn">Otto</button>
+            <button onclick="changeSubTab('Nexorede')" id="subtab-Nexorede"
+                class="px-4 py-1.5 text-sm text-slate-500 hover:text-blue-600 transition-all subtab-btn">Nexorede</button>
+            <button onclick="changeSubTab('Conecta')" id="subtab-Conecta"
+                class="px-4 py-1.5 text-sm text-slate-500 hover:text-blue-600 transition-all subtab-btn">Conecta</button>
+            <button onclick="changeSubTab('Lean')" id="subtab-Lean"
+                class="px-4 py-1.5 text-sm text-slate-500 hover:text-blue-600 transition-all subtab-btn">Lean</button>
+            <button onclick="changeSubTab('Outros')" id="subtab-Outros"
+                class="px-4 py-1.5 text-sm text-slate-500 hover:text-blue-600 transition-all subtab-btn">Outros</button>
         </div>
         <!-- Linha separadora padrão quando as sub-abas estão escondidas -->
         <div id="defaultBorder" class="border-b border-slate-200 mb-6"></div>
@@ -344,34 +491,42 @@ service cloud.firestore {
         <!-- Filtros e Estatísticas -->
         <div class="grid grid-cols-1 md:grid-cols-8 gap-4 mb-6">
             <div class="md:col-span-2">
-                <input type="text" id="searchInput" placeholder="Pesquisar termo ou SMS..." 
-                       class="w-full h-full px-5 py-3 border border-slate-300 rounded-xl shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all">
+                <input type="text" id="searchInput" placeholder="Pesquisar termo ou SMS..."
+                    class="w-full h-full px-5 py-3 border border-slate-300 rounded-xl shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all">
             </div>
             <div class="md:col-span-2">
-                <select id="clientFilter" class="w-full h-full px-5 py-3 border border-slate-300 rounded-xl shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all text-slate-700 bg-white">
+                <select id="clientFilter"
+                    class="w-full h-full px-5 py-3 border border-slate-300 rounded-xl shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all text-slate-700 bg-white">
                     <option value="">Filtrar por Cliente (Todos)</option>
                     <!-- Preenchido via JS -->
                 </select>
             </div>
-            <div class="md:col-span-1 flex items-center justify-center bg-white border border-slate-300 rounded-xl shadow-sm px-3">
+            <div
+                class="md:col-span-1 flex items-center justify-center bg-white border border-slate-300 rounded-xl shadow-sm px-3">
                 <label class="flex items-center gap-2 cursor-pointer text-sm font-medium text-slate-600">
-                    <input type="checkbox" id="hideAnalyzedCheckbox" class="w-5 h-5 text-blue-600 rounded focus:ring-blue-500 cursor-pointer" onchange="window.renderTable()">
+                    <input type="checkbox" id="hideAnalyzedCheckbox"
+                        class="w-5 h-5 text-blue-600 rounded focus:ring-blue-500 cursor-pointer"
+                        onchange="window.renderTable()">
                     Ocultar Analisadas
                 </label>
             </div>
             <div class="md:col-span-1">
-                <button id="btnAnalyzeThemes" onclick="analyzeSimilarities()" title="Ler registos não analisados desta aba" class="hidden w-full h-full bg-indigo-50 hover:bg-indigo-100 text-indigo-700 border border-indigo-200 px-2 py-2 rounded-xl shadow-sm font-bold flex-col items-center justify-center transition-all group">
+                <button id="btnAnalyzeThemes" onclick="analyzeSimilarities()"
+                    title="Ler registos não analisados desta aba"
+                    class="hidden w-full h-full bg-indigo-50 hover:bg-indigo-100 text-indigo-700 border border-indigo-200 px-2 py-2 rounded-xl shadow-sm font-bold flex-col items-center justify-center transition-all group">
                     <span class="text-xl group-hover:scale-110 transition-transform">✨</span>
                     <span class="text-[10px] uppercase tracking-wider mt-1 text-center">Analisar Aba</span>
                 </button>
             </div>
             <div class="md:col-span-1">
-                <button id="btnDeleteAllTab" onclick="openDeleteAllModal()" title="Apagar todas as SMS desta aba" class="hidden w-full h-full bg-red-50 hover:bg-red-100 text-red-700 border border-red-200 px-2 py-2 rounded-xl shadow-sm font-bold flex-col items-center justify-center transition-all group">
+                <button id="btnDeleteAllTab" onclick="openDeleteAllModal()" title="Apagar todas as SMS desta aba"
+                    class="hidden w-full h-full bg-red-50 hover:bg-red-100 text-red-700 border border-red-200 px-2 py-2 rounded-xl shadow-sm font-bold flex-col items-center justify-center transition-all group">
                     <span class="text-xl group-hover:scale-110 transition-transform">🗑️</span>
                     <span class="text-[10px] uppercase tracking-wider mt-1 text-center">Apagar Aba</span>
                 </button>
             </div>
-            <div class="bg-white px-2 py-3 rounded-xl shadow-sm border border-slate-200 flex flex-col justify-center items-center md:col-span-1">
+            <div
+                class="bg-white px-2 py-3 rounded-xl shadow-sm border border-slate-200 flex flex-col justify-center items-center md:col-span-1">
                 <span class="text-[10px] text-slate-400 uppercase font-bold tracking-wider text-center">Registos</span>
                 <span id="rowCount" class="text-2xl font-bold text-blue-600">0</span>
             </div>
@@ -383,11 +538,16 @@ service cloud.firestore {
                 <table class="w-full text-left border-collapse table-auto">
                     <thead>
                         <tr class="bg-slate-800 text-white">
-                            <th class="px-5 py-4 text-xs font-bold uppercase tracking-wider w-48 min-w-[12rem]">Cliente</th>
-                            <th class="px-5 py-4 text-xs font-bold uppercase tracking-wider w-40 min-w-[10rem]">SMS / Módulo</th>
+                            <th class="px-5 py-4 text-xs font-bold uppercase tracking-wider w-48 min-w-[12rem]">Cliente
+                            </th>
+                            <th class="px-5 py-4 text-xs font-bold uppercase tracking-wider w-40 min-w-[10rem]">SMS /
+                                Módulo</th>
                             <th class="px-5 py-4 text-xs font-bold uppercase tracking-wider">Descrição / Resumo</th>
-                            <th class="px-5 py-4 text-xs font-bold uppercase tracking-wider w-44 min-w-[11rem]">Previsão de Entrega</th>
-                            <th class="px-5 py-4 text-xs font-bold uppercase tracking-wider text-center w-32 min-w-[8rem]">Ações</th>
+                            <th class="px-5 py-4 text-xs font-bold uppercase tracking-wider w-44 min-w-[11rem]">Previsão
+                                de Entrega</th>
+                            <th
+                                class="px-5 py-4 text-xs font-bold uppercase tracking-wider text-center w-32 min-w-[8rem]">
+                                Ações</th>
                         </tr>
                     </thead>
                     <tbody id="tableBody" class="divide-y divide-slate-200">
@@ -397,7 +557,8 @@ service cloud.firestore {
             </div>
             <div id="noResults" class="hidden p-16 text-center">
                 <p class="text-slate-400 text-lg">Nenhum registo encontrado nesta visualização.</p>
-                <p class="text-slate-400 text-sm mt-2">Altere os filtros, ajuste a opção "Ocultar Analisadas" ou suba um novo ficheiro.</p>
+                <p class="text-slate-400 text-sm mt-2">Altere os filtros, ajuste a opção "Ocultar Analisadas" ou suba um
+                    novo ficheiro.</p>
             </div>
         </div>
     </div>
@@ -405,22 +566,22 @@ service cloud.firestore {
     <!-- Firebase SDK -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-        import { getAuth, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getAuth, signInWithEmailAndPassword, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
         import { getFirestore, collection, doc, setDoc, onSnapshot, updateDoc, deleteDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
         // === VARIÁVEIS DE ESTADO E CONFIGURAÇÃO ===
         let db, auth, currentUser;
         let currentData = [];
-        let savedAnalyses = []; 
+        let savedAnalyses = [];
         let activeTab = 'Todos';
         let activeSubTab = 'Todos'; // Novo estado para controlar as sub-abas do Saúde
         let pendingDeleteId = null;
         let isLocalMode = false;
         let unsubscribeSnapshot = null;
         let unsubscribeAnalysesSnapshot = null;
-        
-        let rawAnalysisResult = ""; 
-        let analyzedSmsIdsCache = []; 
+
+        let rawAnalysisResult = "";
+        let analyzedSmsIdsCache = [];
 
         // Configuração Hardcoded 
         const firebaseConfig = {
@@ -432,7 +593,7 @@ service cloud.firestore {
             appId: "1:935866993596:web:db9a107d6f4911de6339b9",
             measurementId: "G-V0Z5M1CH35"
         };
-        
+
         const appIdString = firebaseConfig.projectId;
 
         // === INICIALIZAÇÃO DA APP ===
@@ -441,21 +602,59 @@ service cloud.firestore {
             auth = getAuth(app);
             db = getFirestore(app);
 
-            try {
-                await signInAnonymously(auth);
-            } catch (err) {
-                console.error("Erro na autenticação:", err);
-            }
-
             onAuthStateChanged(auth, (user) => {
                 if (user) {
                     currentUser = user;
+                    document.getElementById('loginOverlay').classList.add('hidden');
                     syncData();
                     syncAnalyses();
+                } else {
+                    currentUser = null;
+                    document.getElementById('loginOverlay').classList.remove('hidden');
+                    // Limpar tela de dados
+                    currentData = [];
+                    savedAnalyses = [];
+                    if (window.renderTable) window.renderTable();
                 }
             });
+
+            // Login handling
+            document.getElementById('loginForm').addEventListener('submit', async (e) => {
+                e.preventDefault();
+                const email = document.getElementById('emailInput').value;
+                const password = document.getElementById('passwordInput').value;
+                const errorDiv = document.getElementById('loginError');
+                const btn = document.getElementById('loginBtn');
+
+                try {
+                    errorDiv.classList.add('hidden');
+                    btn.disabled = true;
+                    btn.textContent = 'A entrar...';
+                    await signInWithEmailAndPassword(auth, email, password);
+                } catch (err) {
+                    console.error("Erro no login:", err);
+                    let msg = "Erro de autenticação: Verifique e-mail e senha.";
+                    if (err.code === 'auth/invalid-credential') msg = "E-mail ou senha incorretos.";
+                    else if (err.code === 'auth/user-not-found') msg = "Usuário não encontrado.";
+                    else if (err.code === 'auth/wrong-password') msg = "Senha incorreta.";
+
+                    errorDiv.textContent = msg;
+                    errorDiv.classList.remove('hidden');
+                } finally {
+                    btn.disabled = false;
+                    btn.textContent = 'Entrar';
+                }
+            });
+
+            window.logout = async () => {
+                try {
+                    await signOut(auth);
+                } catch (err) {
+                    console.error("Erro ao sair:", err);
+                }
+            };
         }
-        
+
         initFirebase();
 
         // === UI References ===
@@ -473,20 +672,20 @@ service cloud.firestore {
         window.enableLocalMode = () => {
             isLocalMode = true;
             document.getElementById('localModeWarning').classList.remove('hidden');
-            
+
             // Carrega dados locais se existirem
             const saved = localStorage.getItem('sms_local_data');
-            if(saved) currentData = JSON.parse(saved);
-            
+            if (saved) currentData = JSON.parse(saved);
+
             const savedAn = localStorage.getItem('sms_local_analyses');
-            if(savedAn) savedAnalyses = JSON.parse(savedAn);
-            
+            if (savedAn) savedAnalyses = JSON.parse(savedAn);
+
             updateClientDropdown();
             if (window.renderTable) window.renderTable();
         };
 
         function saveLocalData() {
-            if(isLocalMode) {
+            if (isLocalMode) {
                 localStorage.setItem('sms_local_data', JSON.stringify(currentData));
             }
         }
@@ -494,30 +693,30 @@ service cloud.firestore {
         // === FUNÇÕES DE DADOS E SINCRONIZAÇÃO ===
         function syncData() {
             if (!currentUser || isLocalMode) return;
-            
+
             const colRef = collection(db, 'artifacts', appIdString, 'public', 'data', 'sms_list');
-            
+
             unsubscribeSnapshot = onSnapshot(colRef, (snapshot) => {
                 currentData = snapshot.docs.map(doc => doc.data());
                 updateClientDropdown();
                 if (window.renderTable) window.renderTable();
             }, (error) => {
                 console.error("Erro ao ler dados:", error);
-                
-                if(error.code === 'permission-denied' || error.message.includes('Missing or insufficient permissions')) {
-                   loader.style.display = 'none';
-                   permissionsErrorModal.classList.remove('hidden');
-                   if(unsubscribeSnapshot) unsubscribeSnapshot(); 
-                   enableLocalMode();
+
+                if (error.code === 'permission-denied' || error.message.includes('Missing or insufficient permissions')) {
+                    loader.style.display = 'none';
+                    permissionsErrorModal.classList.remove('hidden');
+                    if (unsubscribeSnapshot) unsubscribeSnapshot();
+                    enableLocalMode();
                 }
             });
         }
 
         function syncAnalyses() {
             if (!currentUser || isLocalMode) return;
-            
+
             const colRefAnalyses = collection(db, 'artifacts', appIdString, 'public', 'data', 'sms_analyses');
-            
+
             unsubscribeAnalysesSnapshot = onSnapshot(colRefAnalyses, (snapshot) => {
                 savedAnalyses = snapshot.docs.map(doc => doc.data());
                 // Força re-render caso a lista esteja aberta e uma análise for deletada noutro dispositivo
@@ -532,7 +731,7 @@ service cloud.firestore {
         function updateClientDropdown() {
             const currentSelection = clientFilter.value;
             const clientes = [...new Set(currentData.map(item => item.cliente))].sort();
-            
+
             clientFilter.innerHTML = '<option value="">Filtrar por Cliente (Todos)</option>';
             clientes.forEach(cliente => {
                 const option = document.createElement('option');
@@ -558,7 +757,7 @@ service cloud.firestore {
                 await updateDoc(docRef, { previsao: novaData });
             } catch (err) {
                 console.error("Erro ao atualizar data:", err);
-                if(err.code === 'permission-denied') permissionsErrorModal.classList.remove('hidden');
+                if (err.code === 'permission-denied') permissionsErrorModal.classList.remove('hidden');
             }
         };
 
@@ -592,7 +791,7 @@ service cloud.firestore {
             } catch (err) {
                 console.error("Erro ao excluir SMS:", err);
                 closeDeleteModal();
-                if(err.code === 'permission-denied') permissionsErrorModal.classList.remove('hidden');
+                if (err.code === 'permission-denied') permissionsErrorModal.classList.remove('hidden');
             }
         };
 
@@ -602,17 +801,17 @@ service cloud.firestore {
                 alert("Selecione uma aba específica (ex: ERP, RH, Saúde) para apagar os seus dados.");
                 return;
             }
-            
+
             let count = 0;
             let targetLabel = activeTab;
-            
+
             if (activeTab === 'Saúde' && activeSubTab !== 'Todos') {
                 count = currentData.filter(i => i.modulo === activeTab && i.sub_modulo === activeSubTab).length;
                 targetLabel = `Saúde ➔ ${activeSubTab}`;
             } else {
                 count = currentData.filter(i => i.modulo === activeTab).length;
             }
-            
+
             if (count === 0) {
                 alert(`A visualização atual (${targetLabel}) já está vazia. Não há nada para apagar.`);
                 return;
@@ -636,7 +835,7 @@ service cloud.firestore {
             } else {
                 smsToDelete = currentData.filter(i => i.modulo === activeTab);
             }
-            
+
             if (smsToDelete.length === 0) {
                 closeDeleteAllModal();
                 return;
@@ -674,7 +873,7 @@ service cloud.firestore {
                 }
             } catch (err) {
                 console.error("Erro ao excluir todas as SMS da aba:", err);
-                if(err.code === 'permission-denied') permissionsErrorModal.classList.remove('hidden');
+                if (err.code === 'permission-denied') permissionsErrorModal.classList.remove('hidden');
             } finally {
                 loader.style.display = 'none';
             }
@@ -709,7 +908,7 @@ service cloud.firestore {
                 const div = document.createElement('div');
                 div.className = "p-3 border border-slate-200 rounded-lg hover:bg-blue-50 cursor-pointer transition-colors";
                 div.onclick = () => showHistoryContent(analysis);
-                
+
                 div.innerHTML = `
                     <div class="flex items-center justify-between mb-1">
                         <span class="text-xs font-bold text-indigo-700 bg-indigo-100 px-2 py-0.5 rounded uppercase">${analysis.modulo}</span>
@@ -756,7 +955,7 @@ service cloud.firestore {
 
         // === Exclusão de Análise de Histórico ===
         let analysisToDeleteId = null;
-        
+
         window.confirmDeleteAnalysisPrompt = (id) => {
             analysisToDeleteId = id;
             document.getElementById('deleteAnalysisModal').classList.remove('hidden');
@@ -813,19 +1012,19 @@ service cloud.firestore {
                 <p style="font-size: 12px; color: #64748b; margin-bottom: 30px;">Gerado no Painel de SMS Cloud em: ${new Date().toLocaleString()}</p>
                 ${contentHtml}
             `;
-            
+
             const dateStr = new Date().toISOString().split('T')[0];
             const opt = {
-                margin:       15,
-                filename:     `Analise_${filenameHeader}_${dateStr}.pdf`,
-                image:        { type: 'jpeg', quality: 0.98 },
-                html2canvas:  { scale: 2, useCORS: true },
-                jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' }
+                margin: 15,
+                filename: `Analise_${filenameHeader}_${dateStr}.pdf`,
+                image: { type: 'jpeg', quality: 0.98 },
+                html2canvas: { scale: 2, useCORS: true },
+                jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
             };
 
             try {
                 await html2pdf().set(opt).from(container).save();
-            } catch(e) {
+            } catch (e) {
                 console.error("Erro ao gerar PDF", e);
                 alert("Falha ao gerar o arquivo PDF. Tente novamente.");
             } finally {
@@ -835,8 +1034,8 @@ service cloud.firestore {
 
         window.downloadSpecificAnalysisPDF = (id) => {
             const analysis = savedAnalyses.find(a => a.id === id);
-            if(!analysis) return;
-            
+            if (!analysis) return;
+
             let htmlFormat = analysis.conteudo;
             htmlFormat = htmlFormat.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
             htmlFormat = htmlFormat.replace(/\*(.*?)\*/g, '<em>$1</em>');
@@ -853,9 +1052,9 @@ service cloud.firestore {
                 alert("Não há dados para exportar. Gere uma análise primeiro.");
                 return;
             }
-            
+
             const targetName = activeTab === 'Saúde' && activeSubTab !== 'Todos' ? `SAÚDE_${activeSubTab}` : activeTab;
-            
+
             let htmlFormat = rawAnalysisResult;
             htmlFormat = htmlFormat.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
             htmlFormat = htmlFormat.replace(/\*(.*?)\*/g, '<em>$1</em>');
@@ -868,21 +1067,21 @@ service cloud.firestore {
         };
 
         // === Função da IA (Gemini) ===
-        
+
         async function getGeminiKey() {
             let key = localStorage.getItem('my_sms_gemini_key');
             if (key) return key.trim();
 
             let isCanvas = false;
-            try { if (typeof __app_id !== 'undefined') isCanvas = true; } catch(e) {}
-            if (isCanvas) return ""; 
+            try { if (typeof __app_id !== 'undefined') isCanvas = true; } catch (e) { }
+            if (isCanvas) return "";
 
             key = window.prompt("Por favor, insira a sua API Key do Google Gemini Studio:");
             if (!key) return null; // Utilizador cancelou
             localStorage.setItem('my_sms_gemini_key', key.trim());
             return key.trim();
         }
-        
+
         function sanitizeText(str) {
             if (!str) return "";
             return str.replace(/[\x00-\x08\x0B\x0C\x0E-\x1F\x7F-\x9F]/g, "").trim();
@@ -894,13 +1093,13 @@ service cloud.firestore {
             { category: "HARM_CATEGORY_SEXUALLY_EXPLICIT", threshold: "BLOCK_ONLY_HIGH" },
             { category: "HARM_CATEGORY_DANGEROUS_CONTENT", threshold: "BLOCK_ONLY_HIGH" }
         ];
-        
+
         async function fetchWithBackoff(url, options, retries = 5) {
             const delays = [2000, 5000, 10000, 15000, 25000];
             for (let i = 0; i <= retries; i++) {
                 try {
                     const response = await fetch(url, options);
-                    const data = await response.json().catch(() => null); 
+                    const data = await response.json().catch(() => null);
 
                     if (!response.ok) {
                         const errMsg = data?.error?.message || `Status HTTP ${response.status}`;
@@ -909,15 +1108,15 @@ service cloud.firestore {
                     return data;
                 } catch (err) {
                     const isTransient = err.message.includes('429') || err.message.includes('500') || err.message.includes('503') || err.message.includes('Failed to fetch');
-                    
+
                     if (i === retries || (!isTransient && !err.message.includes('401'))) {
-                        throw err; 
+                        throw err;
                     }
-                    if(err.message.includes('401')){
+                    if (err.message.includes('401')) {
                         localStorage.removeItem('my_sms_gemini_key');
                         throw new Error("Chave de API inválida ou não autorizada (401). A sua chave foi removida. Por favor, gere uma nova.");
                     }
-                    console.log(`Aviso IA: A API teve um problema temporário (${err.message}). A tentar novamente em ${delays[i]/1000} segundos...`);
+                    console.log(`Aviso IA: A API teve um problema temporário (${err.message}). A tentar novamente em ${delays[i] / 1000} segundos...`);
                     await new Promise(res => setTimeout(res, delays[i]));
                 }
             }
@@ -925,10 +1124,10 @@ service cloud.firestore {
 
         window.generateAISummary = async (smsId) => {
             if (!currentUser && !isLocalMode) return;
-            
+
             const apiKey = await getGeminiKey();
             if (apiKey === null) return;
-            
+
             const modelName = (!apiKey || apiKey === "") ? "gemini-2.5-flash-preview-09-2025" : "gemini-2.5-flash";
 
             const item = currentData.find(i => i.sms === smsId);
@@ -994,10 +1193,10 @@ service cloud.firestore {
 
         window.generateActionPlan = async (smsId) => {
             if (!currentUser && !isLocalMode) return;
-            
+
             const apiKey = await getGeminiKey();
             if (apiKey === null) return;
-            
+
             const modelName = (!apiKey || apiKey === "") ? "gemini-2.5-flash-preview-09-2025" : "gemini-2.5-flash";
 
             const item = currentData.find(i => i.sms === smsId);
@@ -1047,7 +1246,7 @@ Forneça a sua resposta EXATAMENTE no seguinte formato Markdown:
                     aiResponse = aiResponse.replace(/### (.*?)(?:\n|$)/g, '<h3 class="text-lg font-bold text-slate-800 mt-5 mb-2 border-b pb-1">$1</h3>\n');
                     aiResponse = aiResponse.replace(/## (.*?)(?:\n|$)/g, '<h2 class="text-lg font-extrabold text-emerald-700 mt-5 mb-2 bg-emerald-50 px-3 py-1.5 rounded inline-block">$1</h2>\n');
                     aiResponse = aiResponse.replace(/\n\n/g, '<br><br>');
-                    
+
                     document.getElementById('actionPlanContent').innerHTML = aiResponse;
                     openActionPlanModal();
                 }
@@ -1075,7 +1274,7 @@ Forneça a sua resposta EXATAMENTE no seguinte formato Markdown:
             const btnConsolidar = document.getElementById('btnConsolidar');
             btnConsolidar.classList.add('hidden');
             btnConsolidar.classList.remove('flex');
-            
+
             btnConsolidar.innerHTML = `<span class="text-xl">🪄</span> Consolidar Lotes`;
             btnConsolidar.disabled = false;
             btnConsolidar.classList.remove('opacity-75', 'cursor-wait');
@@ -1083,19 +1282,19 @@ Forneça a sua resposta EXATAMENTE no seguinte formato Markdown:
 
         window.analyzeSimilarities = async () => {
             if (!currentUser && !isLocalMode) return;
-            
+
             if (activeTab === 'Todos') {
                 alert("A análise por IA está disponível apenas dentro de uma aba específica (ERP, RH, etc). Selecione uma aba primeiro.");
                 return;
             }
 
             const hideAnalyzed = document.getElementById('hideAnalyzedCheckbox').checked;
-            
+
             let smsDaAbaTotal = currentData.filter(i => i.modulo === activeTab);
             if (activeTab === 'Saúde' && activeSubTab !== 'Todos') {
                 smsDaAbaTotal = smsDaAbaTotal.filter(i => i.sub_modulo === activeSubTab);
             }
-            
+
             if (hideAnalyzed) {
                 smsDaAbaTotal = smsDaAbaTotal.filter(i => !i.analisada);
             }
@@ -1107,33 +1306,33 @@ Forneça a sua resposta EXATAMENTE no seguinte formato Markdown:
 
             const apiKey = await getGeminiKey();
             if (apiKey === null) return;
-            
+
             const modelName = (!apiKey || apiKey === "") ? "gemini-2.5-flash-preview-09-2025" : "gemini-2.5-flash";
 
             analyzedSmsIdsCache = smsDaAbaTotal.map(i => i.sms);
 
             loader.style.display = 'flex';
 
-            const BATCH_SIZE = 50; 
+            const BATCH_SIZE = 50;
             const totalBatches = Math.ceil(smsDaAbaTotal.length / BATCH_SIZE);
             let finalAiResponse = "";
             let houveErroLote = false;
             let msgErroLote = "";
-            
+
             const targetName = activeTab === 'Saúde' && activeSubTab !== 'Todos' ? `SAÚDE - ${activeSubTab}` : activeTab;
 
             for (let currentBatch = 0; currentBatch < totalBatches; currentBatch++) {
                 loaderText.textContent = `A analisar registos da aba ${targetName} (Lote ${currentBatch + 1} de ${totalBatches})...`;
 
                 const batchData = smsDaAbaTotal.slice(currentBatch * BATCH_SIZE, (currentBatch + 1) * BATCH_SIZE);
-                
+
                 let smsListText = `\n\n=== MÓDULO DE NEGÓCIO: ${targetName.toUpperCase()} (LOTE ${currentBatch + 1}) ===\n`;
                 smsListText += batchData.map(i => {
-                    const descSegura = sanitizeText(i.descricao).substring(0, 2000); 
+                    const descSegura = sanitizeText(i.descricao).substring(0, 2000);
                     const modSis = i.modulo_sistema ? ` | Sistema: ${i.modulo_sistema}` : "";
                     return `[SMS: ${i.sms} | Cliente: ${i.cliente}${modSis}]\nDescrição: ${descSegura}`;
                 }).join("\n\n---\n\n");
-                
+
                 const prompt = `Atue como um Especialista em Suporte de TI.
 Abaixo estão os registos referentes à área de negócio '${targetName}'. Elas podem pertencer a diferentes 'Sistemas' (indicado em cada um).
 A sua tarefa é procurar similaridades e agrupá-los.
@@ -1176,7 +1375,7 @@ ${smsListText}`;
                     houveErroLote = true;
                     msgErroLote = err.message;
                     finalAiResponse += `\n\n**[Aviso: Falha ao analisar o Lote ${currentBatch + 1}. Erro devolvido: ${err.message}]**\n\n`;
-                    
+
                     if (err.message.includes('403') || err.message.includes('leaked') || err.message.includes('401')) {
                         break;
                     }
@@ -1191,20 +1390,20 @@ ${smsListText}`;
             loader.style.display = 'none';
 
             if (msgErroLote.includes('leaked') || msgErroLote.includes('401')) {
-                 alert(`Problema com a API Key: ${msgErroLote}`);
+                alert(`Problema com a API Key: ${msgErroLote}`);
                 return;
             }
 
             if (finalAiResponse && finalAiResponse.length > 50) {
-                rawAnalysisResult = finalAiResponse; 
-                
+                rawAnalysisResult = finalAiResponse;
+
                 let htmlFormat = finalAiResponse;
                 htmlFormat = htmlFormat.replace(/\*\*(.*?)\*\*/g, '<strong class="text-slate-900">$1</strong>');
                 htmlFormat = htmlFormat.replace(/\*(.*?)\*/g, '<em class="text-slate-800">$1</em>');
                 htmlFormat = htmlFormat.replace(/### (.*?)(?:\n|$)/g, '<h3 class="text-lg font-bold text-slate-800 mt-5 mb-2 border-b pb-1">$1</h3>\n');
                 htmlFormat = htmlFormat.replace(/## (.*?)(?:\n|$)/g, '<h2 class="text-xl font-extrabold text-indigo-700 mt-6 mb-3 bg-indigo-50 px-3 py-2 rounded-lg inline-block">$1</h2>\n');
                 htmlFormat = htmlFormat.replace(/\n\n/g, '<br><br>');
-                
+
                 let warningHTML = "";
                 if (houveErroLote) {
                     warningHTML = `<div class="bg-red-50 text-red-600 p-3 rounded-lg mb-4 text-sm font-bold border border-red-200">Atenção: A Google rejeitou um ou mais lotes. Motivo principal detetado: ${msgErroLote}</div>`;
@@ -1212,16 +1411,16 @@ ${smsListText}`;
 
                 document.getElementById('similarityDescText').innerHTML = `Agrupamento de <strong>todos os ${smsDaAbaTotal.length} registos</strong> da aba selecionada, processados em ${totalBatches} lote(s) de alta densidade. Ordenado por volume de impacto.`;
                 document.getElementById('similarityContent').innerHTML = warningHTML + htmlFormat;
-                
+
                 const btnConsolidar = document.getElementById('btnConsolidar');
                 if (totalBatches > 1 && !houveErroLote) {
                     btnConsolidar.classList.remove('hidden');
-                    btnConsolidar.classList.add('flex'); 
+                    btnConsolidar.classList.add('flex');
                 } else {
                     btnConsolidar.classList.add('hidden');
                     btnConsolidar.classList.remove('flex');
                 }
-                
+
                 openSimilarityModal();
             } else {
                 alert(`O processo de análise falhou em todos os lotes. Erro devolvido: ${msgErroLote}`);
@@ -1278,9 +1477,9 @@ ${rawAnalysisResult}`;
                 if (!candidate) throw new Error(`Bloqueio de conteúdo na consolidação.`);
 
                 let finalConsolidated = candidate.content?.parts?.[0]?.text?.trim();
-                
+
                 if (finalConsolidated) {
-                    rawAnalysisResult = finalConsolidated; 
+                    rawAnalysisResult = finalConsolidated;
 
                     let htmlFormat = finalConsolidated;
                     htmlFormat = htmlFormat.replace(/\*\*(.*?)\*\*/g, '<strong class="text-slate-900">$1</strong>');
@@ -1288,24 +1487,24 @@ ${rawAnalysisResult}`;
                     htmlFormat = htmlFormat.replace(/### (.*?)(?:\n|$)/g, '<h3 class="text-lg font-bold text-slate-800 mt-5 mb-2 border-b pb-1">$1</h3>\n');
                     htmlFormat = htmlFormat.replace(/## (.*?)(?:\n|$)/g, '<h2 class="text-xl font-extrabold text-indigo-700 mt-6 mb-3 bg-indigo-50 px-3 py-2 rounded-lg inline-block">$1</h2>\n');
                     htmlFormat = htmlFormat.replace(/\n\n/g, '<br><br>');
-                    
+
                     document.getElementById('similarityDescText').innerHTML = `Relatório <strong>Consolidado</strong>. Temas repetidos foram unidos e ordenados por volume de impacto com sucesso.`;
                     contentArea.innerHTML = htmlFormat;
-                    
+
                     btnConsolidar.classList.add('hidden');
                     btnConsolidar.classList.remove('flex');
                 }
             } catch (err) {
                 console.error("Erro na consolidação:", err);
                 alert(`Erro ao tentar consolidar o relatório: ${err.message}`);
-                
+
                 btnConsolidar.innerHTML = originalBtnHTML;
                 btnConsolidar.disabled = false;
                 btnConsolidar.classList.remove('opacity-75', 'cursor-wait');
                 contentArea.innerHTML = originalContentHTML;
-                
-                if(err.message.includes('401')){
-                     localStorage.removeItem('my_sms_gemini_key');
+
+                if (err.message.includes('401')) {
+                    localStorage.removeItem('my_sms_gemini_key');
                 }
             } finally {
                 loader.style.display = 'none';
@@ -1315,7 +1514,7 @@ ${rawAnalysisResult}`;
 
         window.saveAnalysisAndMark = async () => {
             if (!rawAnalysisResult) return;
-            
+
             loaderText.textContent = "A guardar análise e a marcar registos...";
             loader.style.display = 'flex';
 
@@ -1389,16 +1588,16 @@ ${rawAnalysisResult}`;
 
         async function uploadData(dataArray) {
             loader.style.display = 'flex';
-            
+
             if (isLocalMode) {
                 dataArray.forEach(newItem => {
                     const index = currentData.findIndex(i => i.sms === newItem.sms);
-                    if(index > -1) {
+                    if (index > -1) {
                         const oldPrevisao = currentData[index].previsao;
                         const oldAnalisada = currentData[index].analisada;
                         currentData[index] = { ...currentData[index], ...newItem };
-                        if(oldPrevisao) currentData[index].previsao = oldPrevisao;
-                        if(oldAnalisada) currentData[index].analisada = oldAnalisada;
+                        if (oldPrevisao) currentData[index].previsao = oldPrevisao;
+                        if (oldAnalisada) currentData[index].analisada = oldAnalisada;
                     } else {
                         currentData.push(newItem);
                     }
@@ -1414,7 +1613,7 @@ ${rawAnalysisResult}`;
                 loader.style.display = 'none';
                 return;
             }
-            
+
             try {
                 for (const item of dataArray) {
                     const docRef = doc(db, 'artifacts', appIdString, 'public', 'data', 'sms_list', item.sms);
@@ -1422,7 +1621,7 @@ ${rawAnalysisResult}`;
                 }
             } catch (err) {
                 console.error("Erro ao salvar:", err);
-                if(err.code === 'permission-denied') permissionsErrorModal.classList.remove('hidden');
+                if (err.code === 'permission-denied') permissionsErrorModal.classList.remove('hidden');
             } finally {
                 loader.style.display = 'none';
             }
@@ -1432,10 +1631,10 @@ ${rawAnalysisResult}`;
             const normalizedText = text.replace(/\r\n/g, '\n');
             const lines = normalizedText.split('\n');
             if (lines.length === 0) return [];
-            
+
             const headerLine = lines[0].toUpperCase();
             const EXPECTED = headerLine.includes('MODULO') ? 5 : 4;
-            
+
             if (headerLine.includes('CLIENTE')) {
                 lines.shift();
             }
@@ -1443,10 +1642,10 @@ ${rawAnalysisResult}`;
             const rawParts = dataText.split('¬');
             const dataArray = [];
             let tempValues = [];
-            
+
             for (let i = 0; i < rawParts.length; i++) {
                 let part = rawParts[i];
-                
+
                 if (tempValues.length === EXPECTED - 1) {
                     const nlMatch = part.match(/([\s\S]*?)\n([\s\S]+)/);
                     if (nlMatch) {
@@ -1473,13 +1672,13 @@ ${rawAnalysisResult}`;
 
         function processRecord(values, currentTab, currentSubTab, dataArray, expectedCols) {
             let c = values[0];
-            if (c && c.includes('\n')) c = c.split('\n').pop().trim(); 
-            
-            const s = values[1]; 
+            if (c && c.includes('\n')) c = c.split('\n').pop().trim();
+
+            const s = values[1];
             const d = values[2];
             const r = values[3];
             const m = expectedCols === 5 ? values[4] : "";
-            
+
             const cleanC = c ? c.trim() : '';
             const cleanS = s ? s.trim() : '';
             const cleanD = d ? d.trim() : '';
@@ -1488,7 +1687,7 @@ ${rawAnalysisResult}`;
 
             if (cleanC && cleanS && cleanS.length < 50 && !cleanS.includes('/') && cleanC.toUpperCase() !== 'CLIENTE') {
                 const calculadoAba = (currentTab !== 'Todos') ? currentTab : categorizar((cleanD || "") + " " + (cleanR || ""));
-                
+
                 let calculadoSubModulo = "";
                 if (calculadoAba === 'Saúde') {
                     if (currentSubTab && currentSubTab !== 'Todos') {
@@ -1514,7 +1713,7 @@ ${rawAnalysisResult}`;
 
         window.changeTab = (tab) => {
             activeTab = tab;
-            
+
             if (activeTab !== 'Saúde') {
                 activeSubTab = 'Todos';
             }
@@ -1523,18 +1722,18 @@ ${rawAnalysisResult}`;
                 b.classList.remove('tab-active');
                 if (b.id === `tab-${tab}`) b.classList.add('tab-active');
             });
-            
+
             const btnAnalyze = document.getElementById('btnAnalyzeThemes');
             const btnDeleteAll = document.getElementById('btnDeleteAllTab');
             const uploadLabel = document.getElementById('uploadLabel');
             const subTabsContainer = document.getElementById('subTabsContainer');
             const defaultBorder = document.getElementById('defaultBorder');
-            
+
             if (activeTab === 'Saúde') {
                 subTabsContainer.classList.remove('hidden');
                 subTabsContainer.classList.add('flex');
                 defaultBorder.classList.add('hidden');
-                
+
                 document.querySelectorAll('.subtab-btn').forEach(b => {
                     b.classList.remove('subtab-active');
                     if (b.id === `subtab-${activeSubTab}`) b.classList.add('subtab-active');
@@ -1544,7 +1743,7 @@ ${rawAnalysisResult}`;
                 subTabsContainer.classList.remove('flex');
                 defaultBorder.classList.remove('hidden');
             }
-            
+
             if (activeTab === 'Todos') {
                 btnAnalyze.classList.add('hidden');
                 btnAnalyze.classList.remove('flex');
@@ -1556,32 +1755,32 @@ ${rawAnalysisResult}`;
                 btnAnalyze.classList.add('flex');
                 btnDeleteAll.classList.remove('hidden');
                 btnDeleteAll.classList.add('flex');
-                
+
                 if (activeTab === 'Saúde') {
                     uploadLabel.textContent = activeSubTab === 'Todos' ? `Subir para Saúde (Auto-categorizado):` : `Subir para Saúde ➔ ${activeSubTab}:`;
                 } else {
                     uploadLabel.textContent = `Subir ficheiro para a aba ${activeTab}:`;
                 }
             }
-            
+
             if (window.renderTable) window.renderTable();
         };
 
         window.changeSubTab = (subTab) => {
             activeSubTab = subTab;
-            
+
             document.querySelectorAll('.subtab-btn').forEach(b => {
                 b.classList.remove('subtab-active');
                 if (b.id === `subtab-${subTab}`) b.classList.add('subtab-active');
             });
-            
+
             const uploadLabel = document.getElementById('uploadLabel');
             if (activeSubTab === 'Todos') {
                 uploadLabel.textContent = `Subir para Saúde (Auto-categorizado):`;
             } else {
                 uploadLabel.textContent = `Subir para Saúde ➔ ${activeSubTab}:`;
             }
-            
+
             if (window.renderTable) window.renderTable();
         }
 
@@ -1589,13 +1788,13 @@ ${rawAnalysisResult}`;
             if (!tableBody) return;
 
             tableBody.innerHTML = '';
-            
+
             const searchTerm = searchInput.value.toLowerCase();
             const clientTerm = clientFilter.value;
             const hideAnalyzed = hideAnalyzedCheckbox.checked;
 
-            let filtered = activeTab !== 'Todos' 
-                ? currentData.filter(i => i.modulo === activeTab) 
+            let filtered = activeTab !== 'Todos'
+                ? currentData.filter(i => i.modulo === activeTab)
                 : currentData;
 
             if (activeTab === 'Saúde' && activeSubTab !== 'Todos') {
@@ -1607,7 +1806,7 @@ ${rawAnalysisResult}`;
             }
 
             if (searchTerm) {
-                filtered = filtered.filter(i => 
+                filtered = filtered.filter(i =>
                     i.cliente.toLowerCase().includes(searchTerm) ||
                     i.sms.toLowerCase().includes(searchTerm) ||
                     i.descricao.toLowerCase().includes(searchTerm) ||
@@ -1615,7 +1814,7 @@ ${rawAnalysisResult}`;
                     (i.modulo_sistema && i.modulo_sistema.toLowerCase().includes(searchTerm))
                 );
             }
-            
+
             if (hideAnalyzed) {
                 filtered = filtered.filter(i => !i.analisada);
             }
@@ -1626,21 +1825,21 @@ ${rawAnalysisResult}`;
                 noResults.classList.remove('hidden');
             } else {
                 noResults.classList.add('hidden');
-                
+
                 filtered.forEach(item => {
                     const tr = document.createElement('tr');
                     tr.className = "hover:bg-slate-50 transition-colors";
-                    
+
                     const dataPrevisao = item.previsao ? item.previsao : '';
-                    
-                    const statusBadge = item.analisada 
-                        ? `<span class="text-[9px] px-1.5 py-0.5 rounded bg-green-100 text-green-700 font-bold uppercase tracking-wider ml-2 border border-green-200" title="Esta SMS já fez parte de uma Análise de Temas.">✓ Analisada</span>` 
+
+                    const statusBadge = item.analisada
+                        ? `<span class="text-[9px] px-1.5 py-0.5 rounded bg-green-100 text-green-700 font-bold uppercase tracking-wider ml-2 border border-green-200" title="Esta SMS já fez parte de uma Análise de Temas.">✓ Analisada</span>`
                         : '';
 
                     const moduloSistemaBadge = item.modulo_sistema
                         ? `<span class="text-[10px] px-2 py-0.5 rounded bg-blue-100 text-blue-700 font-bold uppercase tracking-wider border border-blue-200" title="Sistema / Módulo Interno">${item.modulo_sistema}</span>`
                         : '';
-                        
+
                     const subModuloBadge = item.sub_modulo && item.modulo === 'Saúde'
                         ? `<span class="text-[10px] px-2 py-0.5 rounded bg-purple-100 text-purple-700 font-bold uppercase tracking-wider border border-purple-200" title="Sub-área da Saúde">${item.sub_modulo}</span>`
                         : '';
@@ -1711,4 +1910,5 @@ ${rawAnalysisResult}`;
 
     </script>
 </body>
+
 </html>
