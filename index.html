@@ -2,177 +2,177 @@
 <html lang="pt-br">
 
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Painel de SMS Cloud</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <!-- Biblioteca para geração de PDF -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
-    <style>
-        .description-cell {
-            white-space: pre-wrap;
-            word-wrap: break-word;
-            word-break: break-word;
-        }
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Painel de SMS Cloud</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<!-- Biblioteca para geração de PDF -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+<style>
+.description-cell {
+white-space: pre-wrap;
+word-wrap: break-word;
+word-break: break-word;
+}
 
-        .sms-badge {
-            font-family: monospace;
-            background-color: #eff6ff;
-            color: #1d4ed8;
-            padding: 2px 6px;
-            border-radius: 4px;
-            font-weight: 600;
-            word-break: break-all;
-        }
+.sms-badge {
+font-family: monospace;
+background-color: #eff6ff;
+color: #1d4ed8;
+padding: 2px 6px;
+border-radius: 4px;
+font-weight: 600;
+word-break: break-all;
+}
 
-        .tab-active {
-            border-bottom: 3px solid #1d4ed8;
-            color: #1d4ed8;
-            font-weight: bold;
-        }
+.tab-active {
+border-bottom: 3px solid #1d4ed8;
+color: #1d4ed8;
+font-weight: bold;
+}
 
-        .subtab-active {
-            background-color: #f1f5f9;
-            color: #0f172a;
-            font-weight: bold;
-            border-radius: 8px;
-        }
+.subtab-active {
+background-color: #f1f5f9;
+color: #0f172a;
+font-weight: bold;
+border-radius: 8px;
+}
 
-        .loading-overlay {
-            display: none;
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(255, 255, 255, 0.8);
-            z-index: 9999;
-            align-items: center;
-            justify-content: center;
-        }
+.loading-overlay {
+display: none;
+position: fixed;
+top: 0;
+left: 0;
+width: 100%;
+height: 100%;
+background: rgba(255, 255, 255, 0.8);
+z-index: 9999;
+align-items: center;
+justify-content: center;
+}
 
-        .custom-scroll::-webkit-scrollbar {
-            width: 6px;
-            height: 6px;
-        }
+.custom-scroll::-webkit-scrollbar {
+width: 6px;
+height: 6px;
+}
 
-        .custom-scroll::-webkit-scrollbar-thumb {
-            background: #cbd5e1;
-            border-radius: 10px;
-        }
+.custom-scroll::-webkit-scrollbar-thumb {
+background: #cbd5e1;
+border-radius: 10px;
+}
 
-        input[type="date"]::-webkit-calendar-picker-indicator {
-            cursor: pointer;
-            opacity: 0.6;
-            transition: 0.2s;
-        }
+input[type="date"]::-webkit-calendar-picker-indicator {
+cursor: pointer;
+opacity: 0.6;
+transition: 0.2s;
+}
 
-        input[type="date"]::-webkit-calendar-picker-indicator:hover {
-            opacity: 1;
-        }
+input[type="date"]::-webkit-calendar-picker-indicator:hover {
+opacity: 1;
+}
 
-        /* Estilos específicos aplicados apenas na geração do PDF */
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap');
+/* Estilos específicos aplicados apenas na geração do PDF */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap');
 
-        .pdf-export-container {
-            font-family: 'Inter', 'Helvetica Neue', Helvetica, Arial, sans-serif;
-            color: #1e293b;
-            background: #ffffff;
-            padding: 20px;
-        }
+.pdf-export-container {
+font-family: 'Inter', 'Helvetica Neue', Helvetica, Arial, sans-serif;
+color: #1e293b;
+background: #ffffff;
+padding: 20px;
+}
 
-        .pdf-header-container {
-            text-align: center;
-            margin-bottom: 40px;
-            padding-bottom: 20px;
-            border-bottom: 3px solid #3b82f6;
-        }
+.pdf-header-container {
+text-align: center;
+margin-bottom: 40px;
+padding-bottom: 20px;
+border-bottom: 3px solid #3b82f6;
+}
 
-        .pdf-header-container h1 {
-            color: #0f172a;
-            font-size: 28px;
-            font-weight: 800;
-            margin: 0 0 10px 0;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-        }
+.pdf-header-container h1 {
+color: #0f172a;
+font-size: 28px;
+font-weight: 800;
+margin: 0 0 10px 0;
+text-transform: uppercase;
+letter-spacing: 1px;
+}
 
-        .pdf-header-container h2 {
-            color: #3b82f6;
-            font-size: 16px;
-            font-weight: 600;
-            margin: 0;
-            letter-spacing: 2px;
-            text-transform: uppercase;
-        }
+.pdf-header-container h2 {
+color: #3b82f6;
+font-size: 16px;
+font-weight: 600;
+margin: 0;
+letter-spacing: 2px;
+text-transform: uppercase;
+}
 
-        .pdf-date {
-            font-size: 12px;
-            color: #64748b;
-            margin-top: 15px;
-            font-style: italic;
-        }
+.pdf-date {
+font-size: 12px;
+color: #64748b;
+margin-top: 15px;
+font-style: italic;
+}
 
-        .pdf-h2 {
-            color: #ffffff;
-            font-size: 18px;
-            margin-top: 30px;
-            margin-bottom: 15px;
-            background-color: #1e40af;
-            padding: 12px 16px;
-            border-radius: 6px;
-            page-break-after: avoid;
-            page-break-inside: avoid;
-            display: block;
-        }
+.pdf-h2 {
+color: #ffffff;
+font-size: 18px;
+margin-top: 30px;
+margin-bottom: 15px;
+background-color: #1e40af;
+padding: 12px 16px;
+border-radius: 6px;
+page-break-after: avoid;
+page-break-inside: avoid;
+display: block;
+}
 
-        .pdf-h3 {
-            color: #1e40af;
-            font-size: 16px;
-            font-weight: 700;
-            margin-top: 20px;
-            margin-bottom: 10px;
-            page-break-after: avoid;
-            page-break-inside: avoid;
-            border-left: 4px solid #1e40af;
-            padding-left: 10px;
-            display: block;
-        }
+.pdf-h3 {
+color: #1e40af;
+font-size: 16px;
+font-weight: 700;
+margin-top: 20px;
+margin-bottom: 10px;
+page-break-after: avoid;
+page-break-inside: avoid;
+border-left: 4px solid #1e40af;
+padding-left: 10px;
+display: block;
+}
 
-        .pdf-block {
-            font-size: 13px;
-            line-height: 1.6;
-            margin-bottom: 15px;
-            page-break-inside: avoid;
-            background-color: #f8fafc;
-            border: 1px solid #e2e8f0;
-            border-radius: 8px;
-            padding: 15px;
-            display: block;
-            width: 100%;
-            box-sizing: border-box;
-        }
+.pdf-block {
+font-size: 13px;
+line-height: 1.6;
+margin-bottom: 15px;
+page-break-inside: avoid;
+background-color: #f8fafc;
+border: 1px solid #e2e8f0;
+border-radius: 8px;
+padding: 15px;
+display: block;
+width: 100%;
+box-sizing: border-box;
+}
 
-        .pdf-block p {
-            margin: 0;
-        }
+.pdf-block p {
+margin: 0;
+}
 
-        .pdf-export-container strong {
-            color: #0f172a;
-            font-weight: 700;
-        }
+.pdf-export-container strong {
+color: #0f172a;
+font-weight: 700;
+}
 
-        .pdf-highlight {
-            color: #991b1b;
-            font-weight: bold;
-            background-color: #fee2e2;
-            padding: 4px 8px;
-            border-radius: 6px;
-            display: inline-block;
-            margin-top: 8px;
-            font-size: 12px;
-            border: 1px solid #fecaca;
-        }
+.pdf-highlight {
+color: #991b1b;
+font-weight: bold;
+background-color: #fee2e2;
+padding: 4px 8px;
+border-radius: 6px;
+display: inline-block;
+margin-top: 8px;
+font-size: 12px;
+border: 1px solid #fecaca;
+}
 
         .pdf-sms-list {
             margin-top: 16px;
@@ -190,1061 +190,17 @@
             color: #475569;
             word-break: break-all;
         }
-    </style>
+</style>
 </head>
 
-<body class="bg-slate-50 min-h-screen p-2 md:p-6 text-slate-900">
-    <!-- Login Overlay -->
-    <div id="loginOverlay" class="fixed inset-0 bg-slate-100 z-[5000] flex items-center justify-center p-4">
-        <div class="bg-white rounded-2xl shadow-2xl p-8 max-w-md w-full">
-            <div class="text-center mb-8">
-                <h2 class="text-3xl font-extrabold text-slate-800">Login</h2>
-                <p class="text-slate-500 mt-2">Acesso restrito ao Painel de SMS Cloud</p>
-            </div>
-            <form id="loginForm" class="space-y-6">
-                <div>
-                    <label class="block text-sm font-medium text-slate-700 mb-1">E-mail</label>
-                    <input type="email" id="emailInput" required
-                        class="w-full px-4 py-3 border border-slate-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all">
-                </div>
-                <div>
-                    <label class="block text-sm font-medium text-slate-700 mb-1">Senha</label>
-                    <input type="password" id="passwordInput" required
-                        class="w-full px-4 py-3 border border-slate-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all">
-                </div>
-                <!-- Error Message -->
-                <div id="loginError" class="hidden text-sm text-red-600 bg-red-50 p-3 rounded-lg border border-red-200">
-                </div>
-
-                <button type="submit" id="loginBtn"
-                    class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-4 rounded-xl shadow-lg transition-all flex justify-center items-center">
-                    Entrar
-                </button>
-            </form>
-        </div>
-    </div>
-
-    <!-- Overlay de Carregamento -->
-    <div id="loader" class="loading-overlay">
-        <div class="flex flex-col items-center">
-            <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
-            <p id="loaderText" class="mt-4 text-slate-600 font-medium text-center px-4">A processar...</p>
-        </div>
-    </div>
-
-    <!-- Modal de Erro de Permissões (Regras Firestore) -->
-    <div id="permissionsErrorModal"
-        class="hidden fixed inset-0 bg-slate-900 bg-opacity-80 z-[4000] flex items-center justify-center p-4">
-        <div
-            class="bg-white rounded-2xl shadow-2xl p-6 md:p-8 max-w-2xl w-full mx-auto max-h-[90vh] overflow-y-auto custom-scroll">
-            <div class="flex items-center gap-3 mb-4 text-amber-600">
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 flex-shrink-0" fill="none" viewBox="0 0 24 24"
-                    stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                        d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
-                </svg>
-                <h2 class="text-2xl font-bold text-slate-800">Atenção: Acesso Negado no Firebase!</h2>
-            </div>
-            <p class="text-slate-600 mb-4 text-sm leading-relaxed">
-                O erro <strong>"Missing or insufficient permissions"</strong> que viu na consola significa que a
-                aplicação conseguiu encontrar o seu projeto, mas <strong>o seu próprio Firebase está a bloquear a
-                    entrada</strong> por segurança.
-            </p>
-            <p class="text-slate-600 mb-4 text-sm leading-relaxed">
-                Enquanto não corrigir as regras, a aplicação irá funcionar em <strong>Modo Local</strong> (os dados não
-                vão para a nuvem). Para ativar a nuvem, siga estes passos:
-            </p>
-
-            <ol class="list-decimal list-inside text-sm text-slate-700 space-y-2 mb-4 ml-2 font-medium">
-                <li>Aceda ao <a href="https://console.firebase.google.com/" target="_blank"
-                        class="text-blue-600 underline">Console do Firebase</a>.</li>
-                <li>Vá a <strong>Firestore Database</strong> > aba <strong>Regras (Rules)</strong>.</li>
-                <li>Substitua o código existente por este e clique em <strong>Publicar</strong>:</li>
-            </ol>
-
-            <div class="relative mb-6">
-                <pre class="bg-slate-800 text-green-400 p-4 rounded-xl text-xs sm:text-sm font-mono overflow-x-auto"><code>rules_version = '2';
-service cloud.firestore {
-  match /databases/{database}/documents {
-    match /{document=**} {
-      allow read, write: if true;
-    }
-  }
-}</code></pre>
-            </div>
-
-            <div class="flex flex-col sm:flex-row justify-end gap-3 mt-6 border-t pt-6 border-slate-200">
-                <button onclick="document.getElementById('permissionsErrorModal').classList.add('hidden')"
-                    class="w-full sm:w-auto px-6 py-3 text-slate-600 hover:bg-slate-100 font-bold rounded-xl transition-colors text-sm">
-                    Continuar em Modo Local
-                </button>
-                <button onclick="window.location.reload()"
-                    class="w-full sm:w-auto bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-6 rounded-xl transition-all shadow-lg text-sm">
-                    Já atualizei as Regras!
-                </button>
-            </div>
-        </div>
-    </div>
-
-    <!-- Modal de Confirmação de Exclusão Individual -->
-    <div id="deleteModal"
-        class="hidden fixed inset-0 bg-slate-900 bg-opacity-50 z-[2000] flex items-center justify-center p-4">
-        <div class="bg-white rounded-xl shadow-2xl p-6 max-w-sm w-full mx-auto">
-            <div class="flex items-center gap-3 mb-4 text-red-600">
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24"
-                    stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                        d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
-                </svg>
-                <h3 class="text-lg font-bold text-slate-800">Excluir SMS</h3>
-            </div>
-            <p class="text-slate-600 mb-6 text-sm">Tem a certeza que deseja excluir o SMS <span id="deleteSmsIdText"
-                    class="font-bold text-slate-800"></span>? Esta ação não pode ser desfeita.</p>
-            <div class="flex justify-end gap-3">
-                <button onclick="closeDeleteModal()"
-                    class="px-4 py-2 text-sm text-slate-600 hover:bg-slate-100 font-medium rounded-lg transition-colors">Cancelar</button>
-                <button onclick="confirmDelete()"
-                    class="px-4 py-2 bg-red-600 hover:bg-red-700 text-white text-sm font-bold rounded-lg transition-colors">Sim,
-                    Excluir</button>
-            </div>
-        </div>
-    </div>
-
-    <!-- Modal de Confirmação de Exclusão de Análise -->
-    <div id="deleteAnalysisModal"
-        class="hidden fixed inset-0 bg-slate-900 bg-opacity-50 z-[4000] flex items-center justify-center p-4">
-        <div class="bg-white rounded-xl shadow-2xl p-6 max-w-sm w-full mx-auto border-t-4 border-red-600">
-            <div class="flex items-center gap-3 mb-4 text-red-600">
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8" fill="none" viewBox="0 0 24 24"
-                    stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                        d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                </svg>
-                <h3 class="text-xl font-bold text-slate-800">Excluir Análise</h3>
-            </div>
-            <p class="text-slate-600 mb-6 text-sm">Tem a certeza que deseja <strong>excluir permanentemente</strong>
-                este relatório de análise do histórico?</p>
-            <div class="flex justify-end gap-3">
-                <button onclick="closeDeleteAnalysisModal()"
-                    class="px-5 py-3 text-sm text-slate-600 hover:bg-slate-100 font-bold rounded-xl transition-colors">Cancelar</button>
-                <button onclick="executeDeleteAnalysis()"
-                    class="px-5 py-3 bg-red-600 hover:bg-red-700 text-white text-sm font-bold rounded-xl transition-colors shadow-lg flex items-center gap-2">
-                    Sim, Excluir
-                </button>
-            </div>
-        </div>
-    </div>
-
-    <!-- Modal de Confirmação de Exclusão de Toda a Aba -->
-    <div id="deleteAllModal"
-        class="hidden fixed inset-0 bg-slate-900 bg-opacity-50 z-[2000] flex items-center justify-center p-4">
-        <div class="bg-white rounded-xl shadow-2xl p-6 max-w-md w-full mx-auto border-t-4 border-red-600">
-            <div class="flex items-center gap-3 mb-4 text-red-600">
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8" fill="none" viewBox="0 0 24 24"
-                    stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                        d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                </svg>
-                <h3 class="text-xl font-bold text-slate-800">Apagar Aba Completa</h3>
-            </div>
-            <p class="text-slate-600 mb-2 text-sm">Tem a certeza que deseja excluir <strong>TODAS as <span
-                        id="deleteAllCountText" class="text-red-600 font-bold"></span> registos</strong> da aba <strong
-                    id="deleteAllTabText"></strong>?</p>
-            <p class="text-slate-500 mb-6 text-xs italic">Atenção: Esta ação é definitiva e removerá todos estes
-                registos do banco de dados.</p>
-            <div class="flex justify-end gap-3">
-                <button onclick="closeDeleteAllModal()"
-                    class="px-5 py-3 text-sm text-slate-600 hover:bg-slate-100 font-bold rounded-xl transition-colors">Cancelar</button>
-                <button onclick="confirmDeleteAll()"
-                    class="px-5 py-3 bg-red-600 hover:bg-red-700 text-white text-sm font-bold rounded-xl transition-colors shadow-lg flex items-center gap-2">
-                    Sim, Apagar Tudo
-                </button>
-            </div>
-        </div>
-    </div>
-
-    <!-- Modal de Análise de Similaridade -->
-    <div id="similarityModal"
-        class="hidden fixed inset-0 bg-slate-900 bg-opacity-50 z-[2000] flex items-center justify-center p-4">
-        <div class="bg-white rounded-xl shadow-2xl p-6 md:p-8 max-w-5xl w-full mx-auto max-h-[90vh] flex flex-col">
-            <div class="flex items-center justify-between mb-2">
-                <div class="flex items-center gap-3 text-indigo-600">
-                    <span class="text-3xl">✨</span>
-                    <h3 class="text-xl font-bold text-slate-800">Análise de Temas por IA</h3>
-                </div>
-                <button onclick="closeSimilarityModal()" class="text-slate-400 hover:text-slate-600 transition-colors">
-                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12">
-                        </path>
-                    </svg>
-                </button>
-            </div>
-            <div id="similarityDescText" class="text-slate-500 mb-6 text-sm border-b pb-4">Agrupamento inteligente dos
-                SMS baseando-se no módulo e contexto.</div>
-            <div id="similarityContent"
-                class="overflow-y-auto custom-scroll flex-1 bg-slate-50 p-6 rounded-xl border border-slate-200 text-sm text-slate-700 whitespace-pre-wrap leading-relaxed shadow-inner">
-                <!-- Conteúdo gerado pela IA aparecerá aqui -->
-            </div>
-            <div class="mt-6 flex flex-wrap justify-end gap-3">
-                <button onclick="exportLiveAnalysisToPDF()" title="Exportar relatório em PDF"
-                    class="px-5 py-3 bg-slate-200 hover:bg-slate-300 text-slate-700 text-sm font-bold rounded-xl transition-colors shadow-sm flex items-center gap-2">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-red-600" viewBox="0 0 20 20"
-                        fill="currentColor">
-                        <path fill-rule="evenodd"
-                            d="M4 4a2 2 0 012-2h4.586A2 2 0 0112 2.586L15.414 6A2 2 0 0116 7.414V16a2 2 0 01-2 2H6a2 2 0 01-2-2V4zm2 6a1 1 0 011-1h6a1 1 0 110 2H7a1 1 0 01-1-1zm1 3a1 1 0 100 2h6a1 1 0 100-2H7z"
-                            clip-rule="evenodd" />
-                    </svg>
-                    Exportar PDF
-                </button>
-                <button id="btnConsolidar" onclick="consolidateAnalysis()"
-                    title="Juntar temas repetidos de lotes diferentes"
-                    class="hidden items-center gap-2 px-5 py-3 bg-fuchsia-600 hover:bg-fuchsia-700 text-white text-sm font-bold rounded-xl transition-colors shadow-md">
-                    <span class="text-xl">🪄</span> Consolidar Lotes
-                </button>
-                <button id="btnSaveAnalysis" onclick="saveAnalysisAndMark()"
-                    title="Guardar histórico e marcar SMS como lidas"
-                    class="flex items-center gap-2 px-5 py-3 bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-bold rounded-xl transition-colors shadow-md">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-                        <path fill-rule="evenodd"
-                            d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
-                            clip-rule="evenodd" />
-                    </svg>
-                    Guardar & Marcar
-                </button>
-                <button onclick="closeSimilarityModal()"
-                    class="px-6 py-3 bg-slate-800 hover:bg-slate-900 text-white text-sm font-bold rounded-xl transition-colors shadow-md">Fechar</button>
-            </div>
-        </div>
-    </div>
-
-    <!-- Modal de Histórico de Análises -->
-    <div id="historyModal"
-        class="hidden fixed inset-0 bg-slate-900 bg-opacity-70 z-[3000] flex items-center justify-center p-4">
-        <div class="bg-white rounded-xl shadow-2xl w-full max-w-4xl mx-auto h-[85vh] flex flex-col overflow-hidden">
-            <div class="p-6 border-b border-slate-200 flex items-center justify-between bg-slate-50">
-                <div class="flex items-center gap-3 text-slate-800">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-blue-600" fill="none"
-                        viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                        <path stroke-linecap="round" stroke-linejoin="round"
-                            d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-                    </svg>
-                    <h3 class="text-xl font-bold">Histórico de Análises</h3>
-                </div>
-                <button onclick="closeHistoryModal()" class="text-slate-400 hover:text-slate-600 transition-colors">
-                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12">
-                        </path>
-                    </svg>
-                </button>
-            </div>
-
-            <div class="flex-1 flex overflow-hidden">
-                <!-- Lista lateral de análises -->
-                <div class="w-1/3 border-r border-slate-200 bg-white overflow-y-auto custom-scroll p-4 space-y-2"
-                    id="historyListContainer">
-                    <!-- Preenchido via JS -->
-                </div>
-
-                <!-- Visualização do conteúdo da análise -->
-                <div class="w-2/3 bg-slate-50 p-6 overflow-y-auto custom-scroll">
-                    <div id="historyContentArea"
-                        class="text-sm text-slate-700 whitespace-pre-wrap leading-relaxed hidden">
-                        <!-- Conteúdo Markdown convertido para HTML entra aqui -->
-                    </div>
-                    <div id="historyEmptyState" class="h-full flex flex-col items-center justify-center text-slate-400">
-                        <svg xmlns="http://www.w3.org/2000/svg" class="h-16 w-16 mb-4 opacity-50" fill="none"
-                            viewBox="0 0 24 24" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                        </svg>
-                        <p>Selecione uma análise ao lado para visualizar.</p>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Modal de Alteração de Senha -->
-    <div id="changePasswordModal"
-        class="hidden fixed inset-0 bg-slate-900 bg-opacity-50 z-[2000] flex items-center justify-center p-4">
-        <div class="bg-white rounded-xl shadow-2xl p-6 max-w-sm w-full mx-auto">
-            <div class="flex items-center gap-3 mb-4 text-blue-600">
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24"
-                    stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                        d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
-                </svg>
-                <h3 class="text-lg font-bold text-slate-800">Alterar Palavra-Passe</h3>
-            </div>
-            <form id="changePasswordForm" class="space-y-4">
-                <div>
-                    <label class="block text-sm font-medium text-slate-700 mb-1">Nova Palavra-passe</label>
-                    <input type="password" id="newPasswordInput" required minlength="6"
-                        class="w-full px-4 py-2 text-sm border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all"
-                        placeholder="Mínimo 6 caracteres">
-                </div>
-                <div>
-                    <label class="block text-sm font-medium text-slate-700 mb-1">Confirmar Nova Palavra-passe</label>
-                    <input type="password" id="confirmNewPasswordInput" required minlength="6"
-                        class="w-full px-4 py-2 text-sm border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all"
-                        placeholder="Repita a palavra-passe">
-                </div>
-
-                <div id="changePasswordMessage" class="hidden text-sm p-3 rounded-lg border"></div>
-
-                <div class="flex justify-end gap-3 pt-2">
-                    <button type="button" onclick="closeChangePasswordModal()"
-                        class="px-4 py-2 text-sm text-slate-600 hover:bg-slate-100 font-medium rounded-lg transition-colors">Cancelar</button>
-                    <button type="submit" id="btnChangePassword"
-                        class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-bold rounded-lg transition-colors flex items-center justify-center min-w-[120px]">
-                        Guardar Nova
-                    </button>
-                </div>
-            </form>
-        </div>
-    </div>
-
-    <!-- Modal de Plano de Ação e Resposta (IA) -->
-    <div id="actionPlanModal"
-        class="hidden fixed inset-0 bg-slate-900 bg-opacity-50 z-[2000] flex items-center justify-center p-4">
-        <div class="bg-white rounded-xl shadow-2xl p-6 md:p-8 max-w-3xl w-full mx-auto max-h-[90vh] flex flex-col">
-            <div class="flex items-center justify-between mb-2">
-                <div class="flex items-center gap-3 text-emerald-600">
-                    <span class="text-3xl">✨</span>
-                    <h3 class="text-xl font-bold text-slate-800">Plano de Ação & Resposta</h3>
-                </div>
-                <button onclick="closeActionPlanModal()" class="text-slate-400 hover:text-slate-600 transition-colors">
-                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12">
-                        </path>
-                    </svg>
-                </button>
-            </div>
-            <div class="text-slate-500 mb-6 text-sm border-b pb-4">Análise de urgência, passos para resolução técnica e
-                rascunho de e-mail para o cliente.</div>
-            <div id="actionPlanContent"
-                class="overflow-y-auto custom-scroll flex-1 bg-slate-50 p-6 rounded-xl border border-slate-200 text-sm text-slate-700 whitespace-pre-wrap leading-relaxed shadow-inner">
-                <!-- Conteúdo gerado pela IA aparecerá aqui -->
-            </div>
-            <div class="mt-6 flex justify-end">
-                <button onclick="closeActionPlanModal()"
-                    class="px-6 py-3 bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-bold rounded-xl transition-colors shadow-md">Concluir</button>
-            </div>
-        </div>
-    </div>
-
-    <div class="w-full max-w-[98%] 2xl:max-w-[1900px] mx-auto">
-        <header class="mb-8 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-            <div>
-                <div class="flex items-center gap-3">
-                    <h1 class="text-3xl font-extrabold text-slate-800 tracking-tight">Painel de SMS Cloud</h1>
-                    <span
-                        class="bg-blue-100 text-blue-800 text-xs font-bold px-2 py-1 rounded-md border border-blue-200 shadow-sm mt-1">v1.1.1</span>
-                </div>
-                <p class="text-slate-500 mt-1">Gestão de demandas, previsões e estado.</p>
-                <span id="localModeWarning"
-                    class="hidden mt-2 inline-flex items-center gap-1 px-3 py-1 rounded-full bg-amber-100 text-amber-700 text-xs font-bold">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
-                        <path fill-rule="evenodd"
-                            d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z"
-                            clip-rule="evenodd" />
-                    </svg>
-                    Modo Local: Regras do Firebase não configuradas. Os dados não serão salvos na nuvem.
-                </span>
-            </div>
-
-            <div class="flex items-center gap-3">
-                <button onclick="openChangePasswordModal()"
-                    class="text-sm font-bold text-slate-500 hover:text-blue-600 transition-colors mr-1 cursor-pointer">Alterar
-                    Senha</button>
-                <div class="h-4 w-px bg-slate-300"></div>
-                <button onclick="logout()"
-                    class="text-sm font-bold text-slate-500 hover:text-red-600 transition-colors mr-2 cursor-pointer">Sair</button>
-                <button onclick="openHistoryModal()"
-                    class="bg-white hover:bg-slate-50 text-slate-700 border border-slate-200 px-4 py-2 rounded-xl shadow-sm text-sm font-bold flex items-center gap-2 transition-colors">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-blue-600" fill="none"
-                        viewBox="0 0 24 24" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                            d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-                    </svg>
-                    Histórico de Análises
-                </button>
-                <div class="flex items-center gap-3 bg-white p-2 md:p-3 rounded-xl shadow-sm border border-slate-200">
-                    <label id="uploadLabel" class="text-sm font-medium text-slate-600 hidden md:block">Subir ficheiro
-                        (Auto-categorizado):</label>
-                    <input type="file" id="fileInput" accept=".txt"
-                        class="text-sm text-slate-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100 cursor-pointer w-48 md:w-auto">
-                </div>
-            </div>
-        </header>
-
-        <!-- Navegação por Abas Principais -->
-        <div class="flex flex-wrap gap-2 mb-2 overflow-x-auto custom-scroll">
-            <button onclick="changeTab('ERP')" id="tab-ERP"
-                class="px-6 py-3 text-slate-500 hover:text-blue-600 transition-all tab-btn">ERP</button>
-            <button onclick="changeTab('RH')" id="tab-RH"
-                class="px-6 py-3 text-slate-500 hover:text-blue-600 transition-all tab-btn">RH</button>
-            <button onclick="changeTab('Logística')" id="tab-Logística"
-                class="px-6 py-3 text-slate-500 hover:text-blue-600 transition-all tab-btn">Logística</button>
-            <button onclick="changeTab('Jurídico')" id="tab-Jurídico"
-                class="px-6 py-3 text-slate-500 hover:text-blue-600 transition-all tab-btn">Jurídico</button>
-            <button onclick="changeTab('Saúde')" id="tab-Saúde"
-                class="px-6 py-3 text-slate-500 hover:text-blue-600 transition-all tab-btn">Saúde</button>
-            <button onclick="changeTab('Todos')" id="tab-Todos"
-                class="px-6 py-3 text-slate-500 hover:text-blue-600 transition-all tab-btn tab-active">Todos</button>
-        </div>
-
-        <!-- Navegação de Sub-Abas (Específico para Saúde) -->
-        <div id="subTabsContainer"
-            class="hidden flex-wrap gap-2 mb-6 pb-2 border-b border-slate-200 overflow-x-auto custom-scroll">
-            <button onclick="changeSubTab('Todos')" id="subtab-Todos"
-                class="px-4 py-1.5 text-sm text-slate-500 hover:text-blue-600 transition-all subtab-btn subtab-active">Toda
-                a Saúde</button>
-            <button onclick="changeSubTab('AG')" id="subtab-AG"
-                class="px-4 py-1.5 text-sm text-slate-500 hover:text-blue-600 transition-all subtab-btn">AG</button>
-            <button onclick="changeSubTab('MG')" id="subtab-MG"
-                class="px-4 py-1.5 text-sm text-slate-500 hover:text-blue-600 transition-all subtab-btn">MG</button>
-            <button onclick="changeSubTab('Moderna')" id="subtab-Moderna"
-                class="px-4 py-1.5 text-sm text-slate-500 hover:text-blue-600 transition-all subtab-btn">Moderna</button>
-            <button onclick="changeSubTab('Otto')" id="subtab-Otto"
-                class="px-4 py-1.5 text-sm text-slate-500 hover:text-blue-600 transition-all subtab-btn">Otto</button>
-            <button onclick="changeSubTab('Nexorede')" id="subtab-Nexorede"
-                class="px-4 py-1.5 text-sm text-slate-500 hover:text-blue-600 transition-all subtab-btn">Nexorede</button>
-            <button onclick="changeSubTab('Conecta')" id="subtab-Conecta"
-                class="px-4 py-1.5 text-sm text-slate-500 hover:text-blue-600 transition-all subtab-btn">Conecta</button>
-            <button onclick="changeSubTab('Lean')" id="subtab-Lean"
-                class="px-4 py-1.5 text-sm text-slate-500 hover:text-blue-600 transition-all subtab-btn">Lean</button>
-            <button onclick="changeSubTab('Outros')" id="subtab-Outros"
-                class="px-4 py-1.5 text-sm text-slate-500 hover:text-blue-600 transition-all subtab-btn">Outros</button>
-        </div>
-        <!-- Linha separadora padrão quando as sub-abas estão escondidas -->
-        <div id="defaultBorder" class="border-b border-slate-200 mb-6"></div>
-
-        <!-- Filtros e Estatísticas -->
-        <div class="grid grid-cols-1 md:grid-cols-8 gap-4 mb-6">
-            <div class="md:col-span-2">
-                <input type="text" id="searchInput" placeholder="Pesquisar termo ou SMS..."
-                    class="w-full h-full px-5 py-3 border border-slate-300 rounded-xl shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all">
-            </div>
-            <div class="md:col-span-2">
-                <select id="clientFilter"
-                    class="w-full h-full px-5 py-3 border border-slate-300 rounded-xl shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all text-slate-700 bg-white">
-                    <option value="">Filtrar por Cliente (Todos)</option>
-                    <!-- Preenchido via JS -->
-                </select>
-            </div>
-            <div
-                class="md:col-span-1 flex items-center justify-center bg-white border border-slate-300 rounded-xl shadow-sm px-3">
-                <label class="flex items-center gap-2 cursor-pointer text-sm font-medium text-slate-600">
-                    <input type="checkbox" id="hideAnalyzedCheckbox"
-                        class="w-5 h-5 text-blue-600 rounded focus:ring-blue-500 cursor-pointer"
-                        onchange="window.renderTable()">
-                    Ocultar Analisadas
-                </label>
-            </div>
-            <div class="md:col-span-1">
-                <button id="btnAnalyzeThemes" onclick="analyzeSimilarities()"
-                    title="Ler registos não analisados desta aba"
-                    class="hidden w-full h-full bg-indigo-50 hover:bg-indigo-100 text-indigo-700 border border-indigo-200 px-2 py-2 rounded-xl shadow-sm font-bold flex-col items-center justify-center transition-all group">
-                    <span class="text-xl group-hover:scale-110 transition-transform">✨</span>
-                    <span class="text-[10px] uppercase tracking-wider mt-1 text-center">Analisar Aba</span>
-                </button>
-            </div>
-            <div class="md:col-span-1">
-                <button id="btnDeleteAllTab" onclick="openDeleteAllModal()" title="Apagar todas as SMS desta aba"
-                    class="hidden w-full h-full bg-red-50 hover:bg-red-100 text-red-700 border border-red-200 px-2 py-2 rounded-xl shadow-sm font-bold flex-col items-center justify-center transition-all group">
-                    <span class="text-xl group-hover:scale-110 transition-transform">🗑️</span>
-                    <span class="text-[10px] uppercase tracking-wider mt-1 text-center">Apagar Aba</span>
-                </button>
-            </div>
-            <div
-                class="bg-white px-2 py-3 rounded-xl shadow-sm border border-slate-200 flex flex-col justify-center items-center md:col-span-1">
-                <span class="text-[10px] text-slate-400 uppercase font-bold tracking-wider text-center">Registos</span>
-                <span id="rowCount" class="text-2xl font-bold text-blue-600">0</span>
-            </div>
-        </div>
-
-        <!-- Tabela -->
-        <div class="bg-white rounded-2xl shadow-xl overflow-hidden border border-slate-200">
-            <div class="overflow-x-auto">
-                <table class="w-full text-left border-collapse table-auto">
-                    <thead>
-                        <tr class="bg-slate-800 text-white">
-                            <th class="px-5 py-4 text-xs font-bold uppercase tracking-wider w-48 min-w-[12rem]">Cliente
-                            </th>
-                            <th class="px-5 py-4 text-xs font-bold uppercase tracking-wider w-40 min-w-[10rem]">SMS /
-                                Módulo</th>
-                            <th class="px-5 py-4 text-xs font-bold uppercase tracking-wider">Descrição / Resumo</th>
-                            <th class="px-5 py-4 text-xs font-bold uppercase tracking-wider w-44 min-w-[11rem]">Previsão
-                                de Entrega</th>
-                            <th
-                                class="px-5 py-4 text-xs font-bold uppercase tracking-wider text-center w-32 min-w-[8rem]">
-                                Ações</th>
-                        </tr>
-                    </thead>
-                    <tbody id="tableBody" class="divide-y divide-slate-200">
-                        <!-- Sincronizado do Firestore -->
-                    </tbody>
-                </table>
-            </div>
-            <div id="noResults" class="hidden p-16 text-center">
-                <p class="text-slate-400 text-lg">Nenhum registo encontrado nesta visualização.</p>
-                <p class="text-slate-400 text-sm mt-2">Altere os filtros, ajuste a opção "Ocultar Analisadas" ou suba um
-                    novo ficheiro.</p>
-            </div>
-        </div>
-    </div>
-
-    <!-- Firebase SDK -->
-    <script type="module">
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-        import { getAuth, signInWithEmailAndPassword, signOut, onAuthStateChanged, updatePassword } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-        import { getFirestore, collection, doc, setDoc, onSnapshot, updateDoc, deleteDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
-
-        // === VARIÁVEIS DE ESTADO E CONFIGURAÇÃO ===
-        let db, auth, currentUser;
-        let currentData = [];
-        let savedAnalyses = [];
-        let activeTab = 'Todos';
-        let activeSubTab = 'Todos'; // Novo estado para controlar as sub-abas do Saúde
-        let pendingDeleteId = null;
-        let isLocalMode = false;
-        let unsubscribeSnapshot = null;
-        let unsubscribeAnalysesSnapshot = null;
-
-        let rawAnalysisResult = "";
-        let analyzedSmsIdsCache = [];
-
-        // Configuração Hardcoded 
-        const firebaseConfig = {
-            apiKey: "AIzaSyCkOgR1EAAyVTshmYHV5_L6vjaXpbEFKe0",
-            authDomain: "sms-s-cdbfc.firebaseapp.com",
-            projectId: "sms-s-cdbfc",
-            storageBucket: "sms-s-cdbfc.firebasestorage.app",
-            messagingSenderId: "935866993596",
-            appId: "1:935866993596:web:db9a107d6f4911de6339b9",
-            measurementId: "G-V0Z5M1CH35"
-        };
-
-        const appIdString = firebaseConfig.projectId;
-
-        // === INICIALIZAÇÃO DA APP ===
-        async function initFirebase() {
-            const app = initializeApp(firebaseConfig);
-            auth = getAuth(app);
-            db = getFirestore(app);
-
-            onAuthStateChanged(auth, (user) => {
-                if (user) {
-                    currentUser = user;
-                    document.getElementById('loginOverlay').classList.add('hidden');
-                    syncData();
-                    syncAnalyses();
-                } else {
-                    currentUser = null;
-                    document.getElementById('loginOverlay').classList.remove('hidden');
-                    // Limpar tela de dados
-                    currentData = [];
-                    savedAnalyses = [];
-                    if (window.renderTable) window.renderTable();
-                }
-            });
-
-            // Login handling
-            document.getElementById('loginForm').addEventListener('submit', async (e) => {
-                e.preventDefault();
-                const email = document.getElementById('emailInput').value;
-                const password = document.getElementById('passwordInput').value;
-                const errorDiv = document.getElementById('loginError');
-                const btn = document.getElementById('loginBtn');
-
-                try {
-                    errorDiv.classList.add('hidden');
-                    btn.disabled = true;
-                    btn.textContent = 'A entrar...';
-                    await signInWithEmailAndPassword(auth, email, password);
-                } catch (err) {
-                    console.error("Erro no login:", err);
-                    let msg = "Erro de autenticação: Verifique e-mail e senha.";
-                    if (err.code === 'auth/invalid-credential') msg = "E-mail ou senha incorretos.";
-                    else if (err.code === 'auth/user-not-found') msg = "Usuário não encontrado.";
-                    else if (err.code === 'auth/wrong-password') msg = "Senha incorreta.";
-
-                    errorDiv.textContent = msg;
-                    errorDiv.classList.remove('hidden');
-                } finally {
-                    btn.disabled = false;
-                    btn.textContent = 'Entrar';
-                }
-            });
-
-            window.logout = async () => {
-                try {
-                    await signOut(auth);
-                } catch (err) {
-                    console.error("Erro ao sair:", err);
-                }
-            };
-
-            // Modal de Alterar Senha
-            window.openChangePasswordModal = () => {
-                document.getElementById('changePasswordForm').reset();
-                document.getElementById('changePasswordMessage').classList.add('hidden');
-                document.getElementById('changePasswordModal').classList.remove('hidden');
-            };
-
-            window.closeChangePasswordModal = () => {
-                document.getElementById('changePasswordModal').classList.add('hidden');
-            };
-
-            document.getElementById('changePasswordForm').addEventListener('submit', async (e) => {
-                e.preventDefault();
-                if (!currentUser) return;
-
-                const newPassword = document.getElementById('newPasswordInput').value;
-                const confirmNewPassword = document.getElementById('confirmNewPasswordInput').value;
-                const messageDiv = document.getElementById('changePasswordMessage');
-                const btn = document.getElementById('btnChangePassword');
-
-                if (newPassword !== confirmNewPassword) {
-                    messageDiv.textContent = "As palavras-passe não coincidem.";
-                    messageDiv.className = "text-sm p-3 rounded-lg border text-red-600 bg-red-50 border-red-200 block";
-                    return;
-                }
-
-                if (newPassword.length < 6) {
-                    messageDiv.textContent = "A senha deve ter pelo menos 6 caracteres.";
-                    messageDiv.className = "text-sm p-3 rounded-lg border text-red-600 bg-red-50 border-red-200 block";
-                    return;
-                }
-
-                try {
-                    messageDiv.classList.add('hidden');
-                    btn.disabled = true;
-                    btn.textContent = 'A guardar...';
-
-                    await updatePassword(currentUser, newPassword);
-
-                    messageDiv.textContent = "Palavra-passe alterada com sucesso! Utilize-a no próximo login.";
-                    messageDiv.className = "text-sm p-3 rounded-lg border text-emerald-700 bg-emerald-50 border-emerald-200 block";
-
-                    setTimeout(() => {
-                        closeChangePasswordModal();
-                    }, 2500);
-
-                } catch (err) {
-                    console.error("Erro ao alterar senha:", err);
-                    let msg = "Erro ao tentar alterar a palavra-passe.";
-                    if (err.code === 'auth/requires-recent-login') {
-                        msg = "A sua sessão expirou por segurança. Saia e entre de novo para alterar a palavra-passe.";
-                    }
-                    messageDiv.textContent = msg;
-                    messageDiv.className = "text-sm p-3 rounded-lg border text-red-600 bg-red-50 border-red-200 block";
-                } finally {
-                    btn.disabled = false;
-                    btn.textContent = 'Guardar Nova';
-                }
-            });
-        }
-
-        initFirebase();
-
-        // === UI References ===
-        const tableBody = document.getElementById('tableBody');
-        const searchInput = document.getElementById('searchInput');
-        const clientFilter = document.getElementById('clientFilter');
-        const rowCount = document.getElementById('rowCount');
-        const noResults = document.getElementById('noResults');
-        const fileInput = document.getElementById('fileInput');
-        const loader = document.getElementById('loader');
-        const loaderText = document.getElementById('loaderText');
-        const permissionsErrorModal = document.getElementById('permissionsErrorModal');
-        const hideAnalyzedCheckbox = document.getElementById('hideAnalyzedCheckbox');
-
-        window.enableLocalMode = () => {
-            isLocalMode = true;
-            document.getElementById('localModeWarning').classList.remove('hidden');
-
-            // Carrega dados locais se existirem
-            const saved = localStorage.getItem('sms_local_data');
-            if (saved) currentData = JSON.parse(saved);
-
-            const savedAn = localStorage.getItem('sms_local_analyses');
-            if (savedAn) savedAnalyses = JSON.parse(savedAn);
-
-            updateClientDropdown();
-            if (window.renderTable) window.renderTable();
-        };
-
-        function saveLocalData() {
-            if (isLocalMode) {
-                localStorage.setItem('sms_local_data', JSON.stringify(currentData));
-            }
-        }
-
-        // === FUNÇÕES DE DADOS E SINCRONIZAÇÃO ===
-        function syncData() {
-            if (!currentUser || isLocalMode) return;
-
-            const colRef = collection(db, 'artifacts', appIdString, 'public', 'data', 'sms_list');
-
-            unsubscribeSnapshot = onSnapshot(colRef, (snapshot) => {
-                currentData = snapshot.docs.map(doc => doc.data());
-                updateClientDropdown();
-                if (window.renderTable) window.renderTable();
-            }, (error) => {
-                console.error("Erro ao ler dados:", error);
-
-                if (error.code === 'permission-denied' || error.message.includes('Missing or insufficient permissions')) {
-                    loader.style.display = 'none';
-                    permissionsErrorModal.classList.remove('hidden');
-                    if (unsubscribeSnapshot) unsubscribeSnapshot();
-                    enableLocalMode();
-                }
-            });
-        }
-
-        function syncAnalyses() {
-            if (!currentUser || isLocalMode) return;
-
-            const colRefAnalyses = collection(db, 'artifacts', appIdString, 'public', 'data', 'sms_analyses');
-
-            unsubscribeAnalysesSnapshot = onSnapshot(colRefAnalyses, (snapshot) => {
-                savedAnalyses = snapshot.docs.map(doc => doc.data());
-                // Força re-render caso a lista esteja aberta e uma análise for deletada noutro dispositivo
-                if (!document.getElementById('historyModal').classList.contains('hidden')) {
-                    renderHistoryList();
-                }
-            }, (error) => {
-                console.error("Erro ao ler histórico de análises:", error);
-            });
-        }
-
-        function updateClientDropdown() {
-            const currentSelection = clientFilter.value;
-            const clientes = [...new Set(currentData.map(item => item.cliente))].sort();
-
-            clientFilter.innerHTML = '<option value="">Filtrar por Cliente (Todos)</option>';
-            clientes.forEach(cliente => {
-                const option = document.createElement('option');
-                option.value = cliente;
-                option.textContent = cliente;
-                clientFilter.appendChild(option);
-            });
-            clientFilter.value = currentSelection;
-        }
-
-        window.updateDate = async (smsId, novaData) => {
-            if (isLocalMode) {
-                const item = currentData.find(i => i.sms === smsId);
-                if (item) item.previsao = novaData;
-                saveLocalData();
-                if (window.renderTable) window.renderTable();
-                return;
-            }
-
-            if (!currentUser) return;
-            try {
-                const docRef = doc(db, 'artifacts', appIdString, 'public', 'data', 'sms_list', smsId);
-                await updateDoc(docRef, { previsao: novaData });
-            } catch (err) {
-                console.error("Erro ao atualizar data:", err);
-                if (err.code === 'permission-denied') permissionsErrorModal.classList.remove('hidden');
-            }
-        };
-
-        window.openDeleteModal = (smsId) => {
-            pendingDeleteId = smsId;
-            document.getElementById('deleteSmsIdText').textContent = smsId;
-            document.getElementById('deleteModal').classList.remove('hidden');
-        };
-
-        window.closeDeleteModal = () => {
-            pendingDeleteId = null;
-            document.getElementById('deleteModal').classList.add('hidden');
-        };
-
-        window.confirmDelete = async () => {
-            if (!pendingDeleteId) return;
-
-            if (isLocalMode) {
-                currentData = currentData.filter(i => i.sms !== pendingDeleteId);
-                saveLocalData();
-                closeDeleteModal();
-                if (window.renderTable) window.renderTable();
-                return;
-            }
-
-            if (!currentUser) return;
-            try {
-                const docRef = doc(db, 'artifacts', appIdString, 'public', 'data', 'sms_list', pendingDeleteId);
-                await deleteDoc(docRef);
-                closeDeleteModal();
-            } catch (err) {
-                console.error("Erro ao excluir SMS:", err);
-                closeDeleteModal();
-                if (err.code === 'permission-denied') permissionsErrorModal.classList.remove('hidden');
-            }
-        };
-
-        // === Exclusão em Massa (Apagar Toda a Aba ou Sub-aba) ===
-        window.openDeleteAllModal = () => {
-            if (activeTab === 'Todos') {
-                alert("Selecione uma aba específica (ex: ERP, RH, Saúde) para apagar os seus dados.");
-                return;
-            }
-
-            let count = 0;
-            let targetLabel = activeTab;
-
-            if (activeTab === 'Saúde' && activeSubTab !== 'Todos') {
-                count = currentData.filter(i => i.modulo === activeTab && i.sub_modulo === activeSubTab).length;
-                targetLabel = `Saúde ➔ ${activeSubTab}`;
-            } else {
-                count = currentData.filter(i => i.modulo === activeTab).length;
-            }
-
-            if (count === 0) {
-                alert(`A visualização atual (${targetLabel}) já está vazia. Não há nada para apagar.`);
-                return;
-            }
-
-            document.getElementById('deleteAllCountText').textContent = count;
-            document.getElementById('deleteAllTabText').textContent = targetLabel;
-            document.getElementById('deleteAllModal').classList.remove('hidden');
-        };
-
-        window.closeDeleteAllModal = () => {
-            document.getElementById('deleteAllModal').classList.add('hidden');
-        };
-
-        window.confirmDeleteAll = async () => {
-            if (activeTab === 'Todos') return;
-
-            let smsToDelete = [];
-            if (activeTab === 'Saúde' && activeSubTab !== 'Todos') {
-                smsToDelete = currentData.filter(i => i.modulo === activeTab && i.sub_modulo === activeSubTab);
-            } else {
-                smsToDelete = currentData.filter(i => i.modulo === activeTab);
-            }
-
-            if (smsToDelete.length === 0) {
-                closeDeleteAllModal();
-                return;
-            }
-
-            loaderText.textContent = `A apagar ${smsToDelete.length} registos da visualização atual...`;
-            loader.style.display = 'flex';
-            closeDeleteAllModal();
-
-            if (isLocalMode) {
-                if (activeTab === 'Saúde' && activeSubTab !== 'Todos') {
-                    currentData = currentData.filter(i => !(i.modulo === activeTab && i.sub_modulo === activeSubTab));
-                } else {
-                    currentData = currentData.filter(i => i.modulo !== activeTab);
-                }
-                saveLocalData();
-                if (window.renderTable) window.renderTable();
-                loader.style.display = 'none';
-                return;
-            }
-
-            if (!currentUser) {
-                loader.style.display = 'none';
-                return;
-            }
-
-            try {
-                const batchSize = 100;
-                for (let i = 0; i < smsToDelete.length; i += batchSize) {
-                    const chunk = smsToDelete.slice(i, i + batchSize);
-                    await Promise.all(chunk.map(item => {
-                        const docRef = doc(db, 'artifacts', appIdString, 'public', 'data', 'sms_list', item.sms);
-                        return deleteDoc(docRef);
-                    }));
-                }
-            } catch (err) {
-                console.error("Erro ao excluir todas as SMS da aba:", err);
-                if (err.code === 'permission-denied') permissionsErrorModal.classList.remove('hidden');
-            } finally {
-                loader.style.display = 'none';
-            }
-        };
-
-        // === Histórico de Análises ===
-        window.openHistoryModal = () => {
-            renderHistoryList();
-            document.getElementById('historyContentArea').classList.add('hidden');
-            document.getElementById('historyEmptyState').classList.remove('hidden');
-            document.getElementById('historyModal').classList.remove('hidden');
-        };
-
-        window.closeHistoryModal = () => {
-            document.getElementById('historyModal').classList.add('hidden');
-        };
-
-        function renderHistoryList() {
-            const container = document.getElementById('historyListContainer');
-            container.innerHTML = '';
-
-            if (savedAnalyses.length === 0) {
-                container.innerHTML = `<p class="text-slate-500 text-sm text-center p-4">Nenhum histórico guardado.</p>`;
-                return;
-            }
-
-            // Ordenar do mais recente para o mais antigo
-            const sortedAnalyses = [...savedAnalyses].sort((a, b) => new Date(b.data) - new Date(a.data));
-
-            sortedAnalyses.forEach(analysis => {
-                const dataFormatada = new Date(analysis.data).toLocaleString();
-                const div = document.createElement('div');
-                div.className = "p-3 border border-slate-200 rounded-lg hover:bg-blue-50 cursor-pointer transition-colors";
-                div.onclick = () => showHistoryContent(analysis);
-
-                div.innerHTML = `
-                    <div class="flex items-center justify-between mb-1">
-                        <span class="text-xs font-bold text-indigo-700 bg-indigo-100 px-2 py-0.5 rounded uppercase">${analysis.modulo}</span>
-                        <span class="text-[10px] text-slate-400">${dataFormatada.split(',')[0]}</span>
-                    </div>
-                    <p class="text-xs text-slate-600 truncate">Gerada em: ${dataFormatada}</p>
-                `;
-                container.appendChild(div);
-            });
-        }
-
-        function showHistoryContent(analysis) {
-            document.getElementById('historyEmptyState').classList.add('hidden');
-            const contentArea = document.getElementById('historyContentArea');
-            contentArea.classList.remove('hidden');
-
-            let htmlFormat = analysis.conteudo;
-            htmlFormat = htmlFormat.replace(/\*\*(.*?)\*\*/g, '<strong class="text-slate-900">$1</strong>');
-            htmlFormat = htmlFormat.replace(/\*(.*?)\*/g, '<em class="text-slate-800">$1</em>');
-            htmlFormat = htmlFormat.replace(/### (.*?)(?:\n|$)/g, '<h3 class="text-lg font-bold text-slate-800 mt-5 mb-2 border-b pb-1">$1</h3>\n');
-            htmlFormat = htmlFormat.replace(/## (.*?)(?:\n|$)/g, '<h2 class="text-xl font-extrabold text-indigo-700 mt-6 mb-3 bg-indigo-50 px-3 py-2 rounded-lg inline-block">$1</h2>\n');
-            htmlFormat = htmlFormat.replace(/\n\n/g, '<br><br>');
-
-            contentArea.innerHTML = `
-                <div class="flex justify-between items-center mb-6 pb-4 border-b border-slate-200">
-                    <div>
-                        <h2 class="text-2xl font-bold text-slate-800">Análise: ${analysis.modulo}</h2>
-                        <p class="text-xs text-slate-500 mt-1">Data de gravação: ${new Date(analysis.data).toLocaleString()}</p>
-                    </div>
-                    <div class="flex gap-4">
-                        <button onclick="confirmDeleteAnalysisPrompt('${analysis.id}')" class="text-red-500 hover:text-red-700 flex flex-col items-center transition-colors" title="Excluir este relatório do histórico">
-                            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
-                            <span class="text-[10px] uppercase font-bold mt-1">Excluir</span>
-                        </button>
-                        <button onclick="downloadSpecificAnalysisPDF('${analysis.id}')" class="text-slate-500 hover:text-blue-600 flex flex-col items-center transition-colors" title="Exportar como documento PDF estruturado">
-                            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>
-                            <span class="text-[10px] uppercase font-bold mt-1">Baixar PDF</span>
-                        </button>
-                    </div>
-                </div>
-                ${htmlFormat}
-            `;
-        }
-
-        // === Exclusão de Análise de Histórico ===
-        let analysisToDeleteId = null;
-
-        window.confirmDeleteAnalysisPrompt = (id) => {
-            analysisToDeleteId = id;
-            document.getElementById('deleteAnalysisModal').classList.remove('hidden');
-        };
-
-        window.closeDeleteAnalysisModal = () => {
-            analysisToDeleteId = null;
-            document.getElementById('deleteAnalysisModal').classList.add('hidden');
-        };
-
-        window.executeDeleteAnalysis = async () => {
-            if (!analysisToDeleteId) return;
-
-            document.getElementById('deleteAnalysisModal').classList.add('hidden');
-            const targetId = analysisToDeleteId;
-            analysisToDeleteId = null;
-
-            loaderText.textContent = "A apagar histórico...";
-            loader.style.display = 'flex';
-
-            try {
-                if (isLocalMode) {
-                    savedAnalyses = savedAnalyses.filter(a => a.id !== targetId);
-                    localStorage.setItem('sms_local_analyses', JSON.stringify(savedAnalyses));
-                    renderHistoryList();
-                    document.getElementById('historyContentArea').classList.add('hidden');
-                    document.getElementById('historyEmptyState').classList.remove('hidden');
-                } else if (currentUser) {
-                    await deleteDoc(doc(db, 'artifacts', appIdString, 'public', 'data', 'sms_analyses', targetId));
-                    // Firebase onSnapshot vai atualizar a UI automaticamente, mas limpamos o ecrã ativo
-                    document.getElementById('historyContentArea').classList.add('hidden');
-                    document.getElementById('historyEmptyState').classList.remove('hidden');
-                }
-            } catch (err) {
-                console.error("Erro ao excluir análise:", err);
-                alert("Erro ao excluir análise do banco de dados.");
-            } finally {
-                loader.style.display = 'none';
-            }
-        };
-
-        // === Geração de PDF ===
-        async function generatePDF(contentHtml, filenameHeader) {
-            loaderText.textContent = "A gerar PDF...";
-            loader.style.display = 'flex';
-
-            // Cria um container isolado com estilos inline forçados para o PDF ficar perfeito
-            const container = document.createElement('div');
-            container.className = "pdf-export-container";
-            container.innerHTML = `
-                <div class="pdf-header-container">
-                    <h1>Relatório de Análise</h1>
-                    <h2>MÓDULO: ${filenameHeader.toUpperCase().replace('_', ' - ')}</h2>
-                    <p class="pdf-date">Gerado no Painel de SMS Cloud em: ${new Date().toLocaleString()}</p>
-                </div>
-                <div class="pdf-content">
-                    ${contentHtml}
-                </div>
-            `;
-
-            const dateStr = new Date().toISOString().split('T')[0];
-            const opt = {
-                margin: [15, 15, 20, 15],
-                filename: `Analise_${filenameHeader}_${dateStr}.pdf`,
-                image: { type: 'jpeg', quality: 1 },
-                html2canvas: { scale: 2, useCORS: true, letterRendering: true, logging: false },
-                jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' },
-                pagebreak: { mode: ['css', 'legacy'], avoid: ['.pdf-block', '.pdf-h2', '.pdf-h3'] }
-            };
-
-            try {
-                await html2pdf().set(opt).from(container).save();
-            } catch (e) {
-                console.error("Erro ao gerar PDF", e);
-                alert("Falha ao gerar o arquivo PDF. Tente novamente.");
-            } finally {
-                loader.style.display = 'none';
-            }
-        }
-
-        function formatTextForPDF(text) {
-            if (!text) return "";
-            let htmlFormat = text;
-
-            htmlFormat = htmlFormat.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
-            htmlFormat = htmlFormat.replace(/\*(.*?)\*/g, '<em>$1</em>');
-
-            let paragraphs = htmlFormat.split(/\n\s*\n/);
-            htmlFormat = paragraphs.map(p => {
-                p = p.trim();
-                if (!p) return '';
-
-                if (p.startsWith('## ')) {
-                    return `<h2 class="pdf-h2">${p.replace(/^##\s*/, '')}</h2>`;
-                } else if (p.startsWith('### ')) {
-                    return `<h3 class="pdf-h3">${p.replace(/^###\s*/, '')}</h3>`;
-                } else {
+@@ -1224,879 +1241,887 @@
+} else if (p.startsWith('### ')) {
+return `<h3 class="pdf-h3">${p.replace(/^###\s*/, '')}</h3>`;
+} else {
+                    let pContent = p.replace(/\n/g, '<br>');
+                    // Highlight the SMS line
+                    pContent = pContent.replace(/\*?\s*(SMS afetados?:?)/ig, '<br><br><span class="pdf-highlight">$1</span>');
+                    return `<div class="pdf-block"><p>${pContent}</p></div>`;
                     let smsMatch = p.match(/(?:\n)?\*?\s*(SMS afetados?:?)\s*([\s\S]*)/i);
                     let mainContent = p;
                     let smsContent = '';
@@ -1257,175 +213,175 @@ service cloud.firestore {
                     let pContent = mainContent.replace(/\n/g, '<br>');
 
                     return `<div class="pdf-block"><p>${pContent}</p>${smsContent}</div>`;
-                }
-            }).join('');
+}
+}).join('');
 
-            return htmlFormat;
-        }
+return htmlFormat;
+}
 
-        window.downloadSpecificAnalysisPDF = (id) => {
-            const analysis = savedAnalyses.find(a => a.id === id);
-            if (!analysis) return;
+window.downloadSpecificAnalysisPDF = (id) => {
+const analysis = savedAnalyses.find(a => a.id === id);
+if (!analysis) return;
 
-            let htmlFormat = formatTextForPDF(analysis.conteudo);
-            generatePDF(htmlFormat, analysis.modulo);
-        };
+let htmlFormat = formatTextForPDF(analysis.conteudo);
+generatePDF(htmlFormat, analysis.modulo);
+};
 
-        window.exportLiveAnalysisToPDF = () => {
-            if (!rawAnalysisResult) {
-                alert("Não há dados para exportar. Gere uma análise primeiro.");
-                return;
-            }
+window.exportLiveAnalysisToPDF = () => {
+if (!rawAnalysisResult) {
+alert("Não há dados para exportar. Gere uma análise primeiro.");
+return;
+}
 
-            const targetName = activeTab === 'Saúde' && activeSubTab !== 'Todos' ? `SAÚDE_${activeSubTab}` : activeTab;
+const targetName = activeTab === 'Saúde' && activeSubTab !== 'Todos' ? `SAÚDE_${activeSubTab}` : activeTab;
 
-            let htmlFormat = formatTextForPDF(rawAnalysisResult);
-            generatePDF(htmlFormat, targetName);
-        };
+let htmlFormat = formatTextForPDF(rawAnalysisResult);
+generatePDF(htmlFormat, targetName);
+};
 
-        // === Função da IA (Gemini) ===
+// === Função da IA (Gemini) ===
 
-        async function getGeminiKey() {
-            let key = localStorage.getItem('my_sms_gemini_key');
-            if (key) return key.trim();
+async function getGeminiKey() {
+let key = localStorage.getItem('my_sms_gemini_key');
+if (key) return key.trim();
 
-            let isCanvas = false;
-            try { if (typeof __app_id !== 'undefined') isCanvas = true; } catch (e) { }
-            if (isCanvas) return "";
+let isCanvas = false;
+try { if (typeof __app_id !== 'undefined') isCanvas = true; } catch (e) { }
+if (isCanvas) return "";
 
-            key = window.prompt("Por favor, insira a sua API Key do Google Gemini Studio:");
-            if (!key) return null; // Utilizador cancelou
-            localStorage.setItem('my_sms_gemini_key', key.trim());
-            return key.trim();
-        }
+key = window.prompt("Por favor, insira a sua API Key do Google Gemini Studio:");
+if (!key) return null; // Utilizador cancelou
+localStorage.setItem('my_sms_gemini_key', key.trim());
+return key.trim();
+}
 
-        function sanitizeText(str) {
-            if (!str) return "";
-            return str.replace(/[\x00-\x08\x0B\x0C\x0E-\x1F\x7F-\x9F]/g, "").trim();
-        }
+function sanitizeText(str) {
+if (!str) return "";
+return str.replace(/[\x00-\x08\x0B\x0C\x0E-\x1F\x7F-\x9F]/g, "").trim();
+}
 
-        const safeSettings = [
-            { category: "HARM_CATEGORY_HARASSMENT", threshold: "BLOCK_ONLY_HIGH" },
-            { category: "HARM_CATEGORY_HATE_SPEECH", threshold: "BLOCK_ONLY_HIGH" },
-            { category: "HARM_CATEGORY_SEXUALLY_EXPLICIT", threshold: "BLOCK_ONLY_HIGH" },
-            { category: "HARM_CATEGORY_DANGEROUS_CONTENT", threshold: "BLOCK_ONLY_HIGH" }
-        ];
+const safeSettings = [
+{ category: "HARM_CATEGORY_HARASSMENT", threshold: "BLOCK_ONLY_HIGH" },
+{ category: "HARM_CATEGORY_HATE_SPEECH", threshold: "BLOCK_ONLY_HIGH" },
+{ category: "HARM_CATEGORY_SEXUALLY_EXPLICIT", threshold: "BLOCK_ONLY_HIGH" },
+{ category: "HARM_CATEGORY_DANGEROUS_CONTENT", threshold: "BLOCK_ONLY_HIGH" }
+];
 
-        async function fetchWithBackoff(url, options, retries = 5) {
-            const delays = [2000, 5000, 10000, 15000, 25000];
-            for (let i = 0; i <= retries; i++) {
-                try {
-                    const response = await fetch(url, options);
-                    const data = await response.json().catch(() => null);
+async function fetchWithBackoff(url, options, retries = 5) {
+const delays = [2000, 5000, 10000, 15000, 25000];
+for (let i = 0; i <= retries; i++) {
+try {
+const response = await fetch(url, options);
+const data = await response.json().catch(() => null);
 
-                    if (!response.ok) {
-                        const errMsg = data?.error?.message || `Status HTTP ${response.status}`;
-                        throw new Error(`${response.status} - ${errMsg}`);
-                    }
-                    return data;
-                } catch (err) {
-                    const isTransient = err.message.includes('429') || err.message.includes('500') || err.message.includes('503') || err.message.includes('Failed to fetch');
+if (!response.ok) {
+const errMsg = data?.error?.message || `Status HTTP ${response.status}`;
+throw new Error(`${response.status} - ${errMsg}`);
+}
+return data;
+} catch (err) {
+const isTransient = err.message.includes('429') || err.message.includes('500') || err.message.includes('503') || err.message.includes('Failed to fetch');
 
-                    if (i === retries || (!isTransient && !err.message.includes('401'))) {
-                        throw err;
-                    }
-                    if (err.message.includes('401')) {
-                        localStorage.removeItem('my_sms_gemini_key');
-                        throw new Error("Chave de API inválida ou não autorizada (401). A sua chave foi removida. Por favor, gere uma nova.");
-                    }
-                    console.log(`Aviso IA: A API teve um problema temporário (${err.message}). A tentar novamente em ${delays[i] / 1000} segundos...`);
-                    await new Promise(res => setTimeout(res, delays[i]));
-                }
-            }
-        }
+if (i === retries || (!isTransient && !err.message.includes('401'))) {
+throw err;
+}
+if (err.message.includes('401')) {
+localStorage.removeItem('my_sms_gemini_key');
+throw new Error("Chave de API inválida ou não autorizada (401). A sua chave foi removida. Por favor, gere uma nova.");
+}
+console.log(`Aviso IA: A API teve um problema temporário (${err.message}). A tentar novamente em ${delays[i] / 1000} segundos...`);
+await new Promise(res => setTimeout(res, delays[i]));
+}
+}
+}
 
-        window.generateAISummary = async (smsId) => {
-            if (!currentUser && !isLocalMode) return;
+window.generateAISummary = async (smsId) => {
+if (!currentUser && !isLocalMode) return;
 
-            const apiKey = await getGeminiKey();
-            if (apiKey === null) return;
+const apiKey = await getGeminiKey();
+if (apiKey === null) return;
 
-            const modelName = (!apiKey || apiKey === "") ? "gemini-2.5-flash-preview-09-2025" : "gemini-2.5-flash";
+const modelName = (!apiKey || apiKey === "") ? "gemini-2.5-flash-preview-09-2025" : "gemini-2.5-flash";
 
-            const item = currentData.find(i => i.sms === smsId);
-            if (!item || !item.descricao) return;
+const item = currentData.find(i => i.sms === smsId);
+if (!item || !item.descricao) return;
 
-            loaderText.textContent = "A IA está a analisar o pedido...";
-            loader.style.display = 'flex';
+loaderText.textContent = "A IA está a analisar o pedido...";
+loader.style.display = 'flex';
 
-            const cleanDesc = sanitizeText(item.descricao);
-            const safeDesc = cleanDesc.length > 8000 ? cleanDesc.substring(0, 8000) + "... [truncado]" : cleanDesc;
+const cleanDesc = sanitizeText(item.descricao);
+const safeDesc = cleanDesc.length > 8000 ? cleanDesc.substring(0, 8000) + "... [truncado]" : cleanDesc;
 
-            const prompt = `Você é um especialista em suporte de TI e sistemas corporativos. Leia a descrição técnica a seguir e crie um resumo ultra-curto, direto e muito claro (de 5 a 12 palavras no máximo) informando qual é o problema ou a solicitação principal:\n\nDescrição: ${safeDesc}`;
+const prompt = `Você é um especialista em suporte de TI e sistemas corporativos. Leia a descrição técnica a seguir e crie um resumo ultra-curto, direto e muito claro (de 5 a 12 palavras no máximo) informando qual é o problema ou a solicitação principal:\n\nDescrição: ${safeDesc}`;
 
-            try {
-                const result = await fetchWithBackoff(
-                    `https://generativelanguage.googleapis.com/v1beta/models/${modelName}:generateContent?key=${apiKey}`,
-                    {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({
-                            contents: [{ parts: [{ text: prompt }] }],
-                            safetySettings: safeSettings
-                        })
-                    }
-                );
+try {
+const result = await fetchWithBackoff(
+`https://generativelanguage.googleapis.com/v1beta/models/${modelName}:generateContent?key=${apiKey}`,
+{
+method: 'POST',
+headers: { 'Content-Type': 'application/json' },
+body: JSON.stringify({
+contents: [{ parts: [{ text: prompt }] }],
+safetySettings: safeSettings
+})
+}
+);
 
-                const candidate = result.candidates?.[0];
-                if (!candidate) throw new Error(`A Google bloqueou a resposta. Motivo: ${result.promptFeedback?.blockReason || 'Desconhecido'}`);
+const candidate = result.candidates?.[0];
+if (!candidate) throw new Error(`A Google bloqueou a resposta. Motivo: ${result.promptFeedback?.blockReason || 'Desconhecido'}`);
 
-                const aiSummary = candidate.content?.parts?.[0]?.text?.trim();
+const aiSummary = candidate.content?.parts?.[0]?.text?.trim();
 
-                if (aiSummary) {
-                    if (isLocalMode) {
-                        item.resumo = `✨ IA: ${aiSummary}`;
-                        saveLocalData();
-                        if (window.renderTable) window.renderTable();
-                    } else {
-                        const docRef = doc(db, 'artifacts', appIdString, 'public', 'data', 'sms_list', smsId);
-                        await updateDoc(docRef, { resumo: `✨ IA: ${aiSummary}` });
-                    }
-                }
-            } catch (err) {
-                console.error("Erro Gemini:", err);
-                if (err.message.includes('403') || err.message.includes('leaked')) {
-                    localStorage.removeItem('my_sms_gemini_key');
-                    alert("A sua API Key foi bloqueada por razões de segurança (vazada). Foi removida do sistema. Tente novamente gerando uma nova chave.");
-                } else {
-                    alert(`Falha na IA: ${err.message}`);
-                }
-            } finally {
-                loader.style.display = 'none';
-                loaderText.textContent = "A processar...";
-            }
-        };
+if (aiSummary) {
+if (isLocalMode) {
+item.resumo = `✨ IA: ${aiSummary}`;
+saveLocalData();
+if (window.renderTable) window.renderTable();
+} else {
+const docRef = doc(db, 'artifacts', appIdString, 'public', 'data', 'sms_list', smsId);
+await updateDoc(docRef, { resumo: `✨ IA: ${aiSummary}` });
+}
+}
+} catch (err) {
+console.error("Erro Gemini:", err);
+if (err.message.includes('403') || err.message.includes('leaked')) {
+localStorage.removeItem('my_sms_gemini_key');
+alert("A sua API Key foi bloqueada por razões de segurança (vazada). Foi removida do sistema. Tente novamente gerando uma nova chave.");
+} else {
+alert(`Falha na IA: ${err.message}`);
+}
+} finally {
+loader.style.display = 'none';
+loaderText.textContent = "A processar...";
+}
+};
 
-        window.openActionPlanModal = () => {
-            document.getElementById('actionPlanModal').classList.remove('hidden');
-        };
+window.openActionPlanModal = () => {
+document.getElementById('actionPlanModal').classList.remove('hidden');
+};
 
-        window.closeActionPlanModal = () => {
-            document.getElementById('actionPlanModal').classList.add('hidden');
-        };
+window.closeActionPlanModal = () => {
+document.getElementById('actionPlanModal').classList.add('hidden');
+};
 
-        window.generateActionPlan = async (smsId) => {
-            if (!currentUser && !isLocalMode) return;
+window.generateActionPlan = async (smsId) => {
+if (!currentUser && !isLocalMode) return;
 
-            const apiKey = await getGeminiKey();
-            if (apiKey === null) return;
+const apiKey = await getGeminiKey();
+if (apiKey === null) return;
 
-            const modelName = (!apiKey || apiKey === "") ? "gemini-2.5-flash-preview-09-2025" : "gemini-2.5-flash";
+const modelName = (!apiKey || apiKey === "") ? "gemini-2.5-flash-preview-09-2025" : "gemini-2.5-flash";
 
-            const item = currentData.find(i => i.sms === smsId);
-            if (!item || !item.descricao) return;
+const item = currentData.find(i => i.sms === smsId);
+if (!item || !item.descricao) return;
 
-            loaderText.textContent = "✨ A criar plano de ação e resposta...";
-            loader.style.display = 'flex';
+loaderText.textContent = "✨ A criar plano de ação e resposta...";
+loader.style.display = 'flex';
 
-            const cleanDesc = sanitizeText(item.descricao);
-            const safeDesc = cleanDesc.length > 8000 ? cleanDesc.substring(0, 8000) + "... [truncado]" : cleanDesc;
+const cleanDesc = sanitizeText(item.descricao);
+const safeDesc = cleanDesc.length > 8000 ? cleanDesc.substring(0, 8000) + "... [truncado]" : cleanDesc;
 
-            const prompt = `Atue como um Engenheiro de Suporte de TI Sénior. Analise o seguinte chamado do cliente '${item.cliente}':
+const prompt = `Atue como um Engenheiro de Suporte de TI Sénior. Analise o seguinte chamado do cliente '${item.cliente}':
 Descrição: ${safeDesc}
 
 Forneça a sua resposta EXATAMENTE no seguinte formato Markdown:
@@ -1439,703 +395,693 @@ Forneça a sua resposta EXATAMENTE no seguinte formato Markdown:
 ## ✉️ Rascunho de Resposta ao Cliente
 [Escreva um e-mail profissional, educado e empático (em português de Portugal ou do Brasil, conforme o contexto), informando o cliente que o problema está a ser tratado ou dando uma orientação inicial. Deixe espaços como [Seu Nome] para preenchimento posterior.]`;
 
-            try {
-                const result = await fetchWithBackoff(
-                    `https://generativelanguage.googleapis.com/v1beta/models/${modelName}:generateContent?key=${apiKey}`,
-                    {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({
-                            contents: [{ parts: [{ text: prompt }] }],
-                            safetySettings: safeSettings
-                        })
-                    }
-                );
+try {
+const result = await fetchWithBackoff(
+`https://generativelanguage.googleapis.com/v1beta/models/${modelName}:generateContent?key=${apiKey}`,
+{
+method: 'POST',
+headers: { 'Content-Type': 'application/json' },
+body: JSON.stringify({
+contents: [{ parts: [{ text: prompt }] }],
+safetySettings: safeSettings
+})
+}
+);
 
-                const candidate = result.candidates?.[0];
-                if (!candidate) throw new Error(`Sem resposta. Motivo bloqueio: ${result.promptFeedback?.blockReason}`);
+const candidate = result.candidates?.[0];
+if (!candidate) throw new Error(`Sem resposta. Motivo bloqueio: ${result.promptFeedback?.blockReason}`);
 
-                let aiResponse = candidate.content?.parts?.[0]?.text?.trim();
+let aiResponse = candidate.content?.parts?.[0]?.text?.trim();
 
-                if (aiResponse) {
-                    aiResponse = aiResponse.replace(/\*\*(.*?)\*\*/g, '<strong class="text-slate-900">$1</strong>');
-                    aiResponse = aiResponse.replace(/\*(.*?)\*/g, '<em class="text-slate-800">$1</em>');
-                    aiResponse = aiResponse.replace(/### (.*?)(?:\n|$)/g, '<h3 class="text-lg font-bold text-slate-800 mt-5 mb-2 border-b pb-1">$1</h3>\n');
-                    aiResponse = aiResponse.replace(/## (.*?)(?:\n|$)/g, '<h2 class="text-lg font-extrabold text-emerald-700 mt-5 mb-2 bg-emerald-50 px-3 py-1.5 rounded inline-block">$1</h2>\n');
-                    aiResponse = aiResponse.replace(/\n\n/g, '<br><br>');
+if (aiResponse) {
+aiResponse = aiResponse.replace(/\*\*(.*?)\*\*/g, '<strong class="text-slate-900">$1</strong>');
+aiResponse = aiResponse.replace(/\*(.*?)\*/g, '<em class="text-slate-800">$1</em>');
+aiResponse = aiResponse.replace(/### (.*?)(?:\n|$)/g, '<h3 class="text-lg font-bold text-slate-800 mt-5 mb-2 border-b pb-1">$1</h3>\n');
+aiResponse = aiResponse.replace(/## (.*?)(?:\n|$)/g, '<h2 class="text-lg font-extrabold text-emerald-700 mt-5 mb-2 bg-emerald-50 px-3 py-1.5 rounded inline-block">$1</h2>\n');
+aiResponse = aiResponse.replace(/\n\n/g, '<br><br>');
 
-                    document.getElementById('actionPlanContent').innerHTML = aiResponse;
-                    openActionPlanModal();
-                }
-            } catch (err) {
-                console.error("Erro Gemini:", err);
-                if (err.message.includes('403') || err.message.includes('leaked')) {
-                    localStorage.removeItem('my_sms_gemini_key');
-                    alert("A sua API Key foi bloqueada por razões de segurança. Tente novamente gerando uma nova chave.");
-                } else {
-                    alert(`Falha na IA: ${err.message}`);
-                }
-            } finally {
-                loader.style.display = 'none';
-                loaderText.textContent = "A processar...";
-            }
-        };
+document.getElementById('actionPlanContent').innerHTML = aiResponse;
+openActionPlanModal();
+}
+} catch (err) {
+console.error("Erro Gemini:", err);
+if (err.message.includes('403') || err.message.includes('leaked')) {
+localStorage.removeItem('my_sms_gemini_key');
+alert("A sua API Key foi bloqueada por razões de segurança. Tente novamente gerando uma nova chave.");
+} else {
+alert(`Falha na IA: ${err.message}`);
+}
+} finally {
+loader.style.display = 'none';
+loaderText.textContent = "A processar...";
+}
+};
 
-        // === Análise de Similaridades e Guardar Histórico ===
-        window.openSimilarityModal = () => {
-            document.getElementById('similarityModal').classList.remove('hidden');
-        };
+// === Análise de Similaridades e Guardar Histórico ===
+window.openSimilarityModal = () => {
+document.getElementById('similarityModal').classList.remove('hidden');
+};
 
-        window.closeSimilarityModal = () => {
-            document.getElementById('similarityModal').classList.add('hidden');
-            const btnConsolidar = document.getElementById('btnConsolidar');
-            btnConsolidar.classList.add('hidden');
-            btnConsolidar.classList.remove('flex');
+window.closeSimilarityModal = () => {
+document.getElementById('similarityModal').classList.add('hidden');
+const btnConsolidar = document.getElementById('btnConsolidar');
+btnConsolidar.classList.add('hidden');
+btnConsolidar.classList.remove('flex');
 
-            btnConsolidar.innerHTML = `<span class="text-xl">🪄</span> Consolidar Lotes`;
-            btnConsolidar.disabled = false;
-            btnConsolidar.classList.remove('opacity-75', 'cursor-wait');
-        };
+btnConsolidar.innerHTML = `<span class="text-xl">🪄</span> Consolidar Lotes`;
+btnConsolidar.disabled = false;
+btnConsolidar.classList.remove('opacity-75', 'cursor-wait');
+};
 
-        window.analyzeSimilarities = async () => {
-            if (!currentUser && !isLocalMode) return;
+window.analyzeSimilarities = async () => {
+if (!currentUser && !isLocalMode) return;
 
-            if (activeTab === 'Todos') {
-                alert("A análise por IA está disponível apenas dentro de uma aba específica (ERP, RH, etc). Selecione uma aba primeiro.");
-                return;
-            }
+if (activeTab === 'Todos') {
+alert("A análise por IA está disponível apenas dentro de uma aba específica (ERP, RH, etc). Selecione uma aba primeiro.");
+return;
+}
 
-            const hideAnalyzed = document.getElementById('hideAnalyzedCheckbox').checked;
+const hideAnalyzed = document.getElementById('hideAnalyzedCheckbox').checked;
 
-            let smsDaAbaTotal = currentData.filter(i => i.modulo === activeTab);
-            if (activeTab === 'Saúde' && activeSubTab !== 'Todos') {
-                smsDaAbaTotal = smsDaAbaTotal.filter(i => i.sub_modulo === activeSubTab);
-            }
+let smsDaAbaTotal = currentData.filter(i => i.modulo === activeTab);
+if (activeTab === 'Saúde' && activeSubTab !== 'Todos') {
+smsDaAbaTotal = smsDaAbaTotal.filter(i => i.sub_modulo === activeSubTab);
+}
 
-            if (hideAnalyzed) {
-                smsDaAbaTotal = smsDaAbaTotal.filter(i => !i.analisada);
-            }
+if (hideAnalyzed) {
+smsDaAbaTotal = smsDaAbaTotal.filter(i => !i.analisada);
+}
 
-            if (smsDaAbaTotal.length === 0) {
-                alert(`Não existem SMS pendentes na aba atual para analisar.`);
-                return;
-            }
+if (smsDaAbaTotal.length === 0) {
+alert(`Não existem SMS pendentes na aba atual para analisar.`);
+return;
+}
 
-            const apiKey = await getGeminiKey();
-            if (apiKey === null) return;
+const apiKey = await getGeminiKey();
+if (apiKey === null) return;
 
-            const modelName = (!apiKey || apiKey === "") ? "gemini-2.5-flash-preview-09-2025" : "gemini-2.5-flash";
+const modelName = (!apiKey || apiKey === "") ? "gemini-2.5-flash-preview-09-2025" : "gemini-2.5-flash";
 
-            analyzedSmsIdsCache = smsDaAbaTotal.map(i => i.sms);
+analyzedSmsIdsCache = smsDaAbaTotal.map(i => i.sms);
 
-            loader.style.display = 'flex';
+loader.style.display = 'flex';
 
-            const BATCH_SIZE = 50;
-            const totalBatches = Math.ceil(smsDaAbaTotal.length / BATCH_SIZE);
-            let finalAiResponse = "";
-            let houveErroLote = false;
-            let msgErroLote = "";
+const BATCH_SIZE = 50;
+const totalBatches = Math.ceil(smsDaAbaTotal.length / BATCH_SIZE);
+let finalAiResponse = "";
+let houveErroLote = false;
+let msgErroLote = "";
 
-            const targetName = activeTab === 'Saúde' && activeSubTab !== 'Todos' ? `SAÚDE - ${activeSubTab}` : activeTab;
+const targetName = activeTab === 'Saúde' && activeSubTab !== 'Todos' ? `SAÚDE - ${activeSubTab}` : activeTab;
 
-            for (let currentBatch = 0; currentBatch < totalBatches; currentBatch++) {
-                loaderText.textContent = `A analisar registos da aba ${targetName} (Lote ${currentBatch + 1} de ${totalBatches})...`;
+for (let currentBatch = 0; currentBatch < totalBatches; currentBatch++) {
+loaderText.textContent = `A analisar registos da aba ${targetName} (Lote ${currentBatch + 1} de ${totalBatches})...`;
 
-                const batchData = smsDaAbaTotal.slice(currentBatch * BATCH_SIZE, (currentBatch + 1) * BATCH_SIZE);
+const batchData = smsDaAbaTotal.slice(currentBatch * BATCH_SIZE, (currentBatch + 1) * BATCH_SIZE);
 
-                let smsListText = `\n\n=== MÓDULO DE NEGÓCIO: ${targetName.toUpperCase()} (LOTE ${currentBatch + 1}) ===\n`;
-                smsListText += batchData.map(i => {
-                    const descSegura = sanitizeText(i.descricao).substring(0, 2000);
-                    const resumoSeguro = i.resumo ? sanitizeText(i.resumo).substring(0, 500) : "";
-                    const modSis = i.modulo_sistema ? ` | Sistema: ${i.modulo_sistema}` : "";
-                    const mod = i.modulo ? ` | Módulo: ${i.modulo}` : "";
-                    const resumoTexto = resumoSeguro ? `\nResumo: ${resumoSeguro}` : "";
-                    return `[SMS: ${i.sms} | Cliente: ${i.cliente}${modSis}${mod}]\nDescrição: ${descSegura}${resumoTexto}`;
-                }).join("\n\n---\n\n");
+let smsListText = `\n\n=== MÓDULO DE NEGÓCIO: ${targetName.toUpperCase()} (LOTE ${currentBatch + 1}) ===\n`;
+smsListText += batchData.map(i => {
+const descSegura = sanitizeText(i.descricao).substring(0, 2000);
+const modSis = i.modulo_sistema ? ` | Sistema: ${i.modulo_sistema}` : "";
+return `[SMS: ${i.sms} | Cliente: ${i.cliente}${modSis}]\nDescrição: ${descSegura}`;
+}).join("\n\n---\n\n");
 
-                const prompt = `Atue como um Especialista em Suporte de TI.
-Abaixo estão os registos referentes à área de negócio '${targetName}'. A sua tarefa é efetuar a análise lendo os campos de Descrição e Resumo, interpretando-os para procurar assuntos similares para agrupamento.
+const prompt = `Atue como um Especialista em Suporte de TI.
+Abaixo estão os registos referentes à área de negócio '${targetName}'. Elas podem pertencer a diferentes 'Sistemas' (indicado em cada um).
+A sua tarefa é procurar similaridades e agrupá-los.
 
 Regras OBRIGATÓRIAS:
 1. Comece com um cabeçalho '## Resumo Analítico - Lote ${currentBatch + 1}'.
-2. Para que a análise seja mais eficiente, obedeça estritamente à seguinte hierarquia de agrupamento:
-   - 1º: Agrupar por 'Sistema' (analisar e agrupar SMS do mesmo sistema). Não misture SMS de sistemas diferentes no mesmo grupo.
-   - 2º: Dentro de cada Sistema, agrupar por 'Módulo' (analisar e agrupar SMS que sejam do mesmo módulo).
-   - 3º: Dentro de cada Módulo, agrupe os SMS interpretando os campos Descrição/Resumo para juntar problemas com o mesmo assunto.
-3. Se um registo não tiver 'Sistema' ou 'Módulo', agrupe-o num grupo de 'Contexto Geral' ou 'Não Informado'.
-4. Estrutura esperada:
-   ### Sistema: [Nome]
-   #### Módulo: [Nome]
-   **Tema**: [Resumo do Assunto]
-   [Explicação de 1 ou 2 linhas do problema]
-   - Afetados: [Lista de SMS e Clientes]
+2. Agrupe os registos comparando e respeitando o 'Sistema' de cada um. Não misture problemas de sistemas diferentes no mesmo tema.
+3. Se um registo não tiver 'Sistema' indicado, analise-o num grupo de contexto geral.
+4. Crie subgrupos por Sistema e depois por Temas de similaridade (ex: '### [Nome do Sistema] - Lentidão no Login').
 5. Forneça uma breve explicação de 1 a 2 linhas sobre o que aquele tema aborda.
 6. Liste os números de SMS exatos e os respetivos Clientes afetados.
 7. Formate a resposta usando Markdown limpo.
-8. Ordene os temas de forma DECRESCENTE pelo número de SMS afetados.
+8. Ordene os subgrupos gerados de forma DECRESCENTE de acordo com a quantidade de registos/SMS associados (o tema com maior número de incidentes deve aparecer primeiro).
 
 Aqui estão os dados deste lote:
 ${smsListText}`;
 
-                try {
-                    const result = await fetchWithBackoff(
-                        `https://generativelanguage.googleapis.com/v1beta/models/${modelName}:generateContent?key=${apiKey}`,
-                        {
-                            method: 'POST',
-                            headers: { 'Content-Type': 'application/json' },
-                            body: JSON.stringify({
-                                contents: [{ parts: [{ text: prompt }] }],
-                                safetySettings: safeSettings
-                            })
-                        }
-                    );
+try {
+const result = await fetchWithBackoff(
+`https://generativelanguage.googleapis.com/v1beta/models/${modelName}:generateContent?key=${apiKey}`,
+{
+method: 'POST',
+headers: { 'Content-Type': 'application/json' },
+body: JSON.stringify({
+contents: [{ parts: [{ text: prompt }] }],
+safetySettings: safeSettings
+})
+}
+);
 
-                    const candidate = result.candidates?.[0];
-                    if (!candidate) throw new Error(`Bloqueio de conteúdo. Motivo: ${result.promptFeedback?.blockReason || 'Desconhecido'}`);
+const candidate = result.candidates?.[0];
+if (!candidate) throw new Error(`Bloqueio de conteúdo. Motivo: ${result.promptFeedback?.blockReason || 'Desconhecido'}`);
 
-                    let responseText = candidate.content?.parts?.[0]?.text?.trim();
-                    if (responseText) {
-                        finalAiResponse += responseText + "\n\n<hr class='my-8 border-slate-300'>\n\n";
-                    }
-                } catch (err) {
-                    console.error("Erro fatal Gemini Lote", currentBatch, err);
-                    houveErroLote = true;
-                    msgErroLote = err.message;
-                    finalAiResponse += `\n\n**[Aviso: Falha ao analisar o Lote ${currentBatch + 1}. Erro devolvido: ${err.message}]**\n\n`;
+let responseText = candidate.content?.parts?.[0]?.text?.trim();
+if (responseText) {
+finalAiResponse += responseText + "\n\n<hr class='my-8 border-slate-300'>\n\n";
+}
+} catch (err) {
+console.error("Erro fatal Gemini Lote", currentBatch, err);
+houveErroLote = true;
+msgErroLote = err.message;
+finalAiResponse += `\n\n**[Aviso: Falha ao analisar o Lote ${currentBatch + 1}. Erro devolvido: ${err.message}]**\n\n`;
 
-                    if (err.message.includes('403') || err.message.includes('leaked') || err.message.includes('401')) {
-                        break;
-                    }
-                }
+if (err.message.includes('403') || err.message.includes('leaked') || err.message.includes('401')) {
+break;
+}
+}
 
-                if (currentBatch < totalBatches - 1 && !houveErroLote) {
-                    loaderText.textContent = `A processar o próximo lote (${currentBatch + 1}/${totalBatches})...`;
-                    await new Promise(res => setTimeout(res, 1000));
-                }
-            }
+if (currentBatch < totalBatches - 1 && !houveErroLote) {
+loaderText.textContent = `A processar o próximo lote (${currentBatch + 1}/${totalBatches})...`;
+await new Promise(res => setTimeout(res, 1000));
+}
+}
 
-            loader.style.display = 'none';
+loader.style.display = 'none';
 
-            if (msgErroLote.includes('leaked') || msgErroLote.includes('401')) {
-                alert(`Problema com a API Key: ${msgErroLote}`);
-                return;
-            }
+if (msgErroLote.includes('leaked') || msgErroLote.includes('401')) {
+alert(`Problema com a API Key: ${msgErroLote}`);
+return;
+}
 
-            if (finalAiResponse && finalAiResponse.length > 50) {
-                rawAnalysisResult = finalAiResponse;
+if (finalAiResponse && finalAiResponse.length > 50) {
+rawAnalysisResult = finalAiResponse;
 
-                let htmlFormat = finalAiResponse;
-                htmlFormat = htmlFormat.replace(/\*\*(.*?)\*\*/g, '<strong class="text-slate-900">$1</strong>');
-                htmlFormat = htmlFormat.replace(/\*(.*?)\*/g, '<em class="text-slate-800">$1</em>');
-                htmlFormat = htmlFormat.replace(/### (.*?)(?:\n|$)/g, '<h3 class="text-lg font-bold text-slate-800 mt-5 mb-2 border-b pb-1">$1</h3>\n');
-                htmlFormat = htmlFormat.replace(/## (.*?)(?:\n|$)/g, '<h2 class="text-xl font-extrabold text-indigo-700 mt-6 mb-3 bg-indigo-50 px-3 py-2 rounded-lg inline-block">$1</h2>\n');
-                htmlFormat = htmlFormat.replace(/\n\n/g, '<br><br>');
+let htmlFormat = finalAiResponse;
+htmlFormat = htmlFormat.replace(/\*\*(.*?)\*\*/g, '<strong class="text-slate-900">$1</strong>');
+htmlFormat = htmlFormat.replace(/\*(.*?)\*/g, '<em class="text-slate-800">$1</em>');
+htmlFormat = htmlFormat.replace(/### (.*?)(?:\n|$)/g, '<h3 class="text-lg font-bold text-slate-800 mt-5 mb-2 border-b pb-1">$1</h3>\n');
+htmlFormat = htmlFormat.replace(/## (.*?)(?:\n|$)/g, '<h2 class="text-xl font-extrabold text-indigo-700 mt-6 mb-3 bg-indigo-50 px-3 py-2 rounded-lg inline-block">$1</h2>\n');
+htmlFormat = htmlFormat.replace(/\n\n/g, '<br><br>');
 
-                let warningHTML = "";
-                if (houveErroLote) {
-                    warningHTML = `<div class="bg-red-50 text-red-600 p-3 rounded-lg mb-4 text-sm font-bold border border-red-200">Atenção: A Google rejeitou um ou mais lotes. Motivo principal detetado: ${msgErroLote}</div>`;
-                }
+let warningHTML = "";
+if (houveErroLote) {
+warningHTML = `<div class="bg-red-50 text-red-600 p-3 rounded-lg mb-4 text-sm font-bold border border-red-200">Atenção: A Google rejeitou um ou mais lotes. Motivo principal detetado: ${msgErroLote}</div>`;
+}
 
-                document.getElementById('similarityDescText').innerHTML = `Agrupamento de <strong>todos os ${smsDaAbaTotal.length} registos</strong> da aba selecionada, processados em ${totalBatches} lote(s) de alta densidade. Ordenado por volume de impacto.`;
-                document.getElementById('similarityContent').innerHTML = warningHTML + htmlFormat;
+document.getElementById('similarityDescText').innerHTML = `Agrupamento de <strong>todos os ${smsDaAbaTotal.length} registos</strong> da aba selecionada, processados em ${totalBatches} lote(s) de alta densidade. Ordenado por volume de impacto.`;
+document.getElementById('similarityContent').innerHTML = warningHTML + htmlFormat;
 
-                const btnConsolidar = document.getElementById('btnConsolidar');
-                if (totalBatches > 1 && !houveErroLote) {
-                    btnConsolidar.classList.remove('hidden');
-                    btnConsolidar.classList.add('flex');
-                } else {
-                    btnConsolidar.classList.add('hidden');
-                    btnConsolidar.classList.remove('flex');
-                }
+const btnConsolidar = document.getElementById('btnConsolidar');
+if (totalBatches > 1 && !houveErroLote) {
+btnConsolidar.classList.remove('hidden');
+btnConsolidar.classList.add('flex');
+} else {
+btnConsolidar.classList.add('hidden');
+btnConsolidar.classList.remove('flex');
+}
 
-                openSimilarityModal();
-            } else {
-                alert(`O processo de análise falhou em todos os lotes. Erro devolvido: ${msgErroLote}`);
-            }
-        };
+openSimilarityModal();
+} else {
+alert(`O processo de análise falhou em todos os lotes. Erro devolvido: ${msgErroLote}`);
+}
+};
 
-        window.consolidateAnalysis = async () => {
-            if (!rawAnalysisResult) return;
+window.consolidateAnalysis = async () => {
+if (!rawAnalysisResult) return;
 
-            const apiKey = await getGeminiKey();
-            if (apiKey === null) return;
-            const modelName = (!apiKey || apiKey === "") ? "gemini-2.5-flash-preview-09-2025" : "gemini-2.5-flash";
+const apiKey = await getGeminiKey();
+if (apiKey === null) return;
+const modelName = (!apiKey || apiKey === "") ? "gemini-2.5-flash-preview-09-2025" : "gemini-2.5-flash";
 
-            const btnConsolidar = document.getElementById('btnConsolidar');
-            const originalBtnHTML = btnConsolidar.innerHTML;
-            btnConsolidar.innerHTML = `<svg class="animate-spin h-5 w-5 mr-2" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg> A processar...`;
-            btnConsolidar.disabled = true;
-            btnConsolidar.classList.add('opacity-75', 'cursor-wait');
+const btnConsolidar = document.getElementById('btnConsolidar');
+const originalBtnHTML = btnConsolidar.innerHTML;
+btnConsolidar.innerHTML = `<svg class="animate-spin h-5 w-5 mr-2" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg> A processar...`;
+btnConsolidar.disabled = true;
+btnConsolidar.classList.add('opacity-75', 'cursor-wait');
 
-            const contentArea = document.getElementById('similarityContent');
-            const originalContentHTML = contentArea.innerHTML;
-            contentArea.innerHTML = `<div class="flex flex-col items-center justify-center py-16 text-slate-500"><svg class="animate-spin h-12 w-12 text-fuchsia-600 mb-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg><p class="text-lg font-bold text-slate-700">A cruzar temas e consolidar dados...</p><p class="text-sm mt-2">A IA está a gerar o relatório definitivo. Por favor, aguarde.</p></div>`;
+const contentArea = document.getElementById('similarityContent');
+const originalContentHTML = contentArea.innerHTML;
+contentArea.innerHTML = `<div class="flex flex-col items-center justify-center py-16 text-slate-500"><svg class="animate-spin h-12 w-12 text-fuchsia-600 mb-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg><p class="text-lg font-bold text-slate-700">A cruzar temas e consolidar dados...</p><p class="text-sm mt-2">A IA está a gerar o relatório definitivo. Por favor, aguarde.</p></div>`;
 
-            loaderText.textContent = "A consolidar temas cruzados dos lotes... Isto gerará o relatório final definitivo.";
-            loader.style.display = 'flex';
+loaderText.textContent = "A consolidar temas cruzados dos lotes... Isto gerará o relatório final definitivo.";
+loader.style.display = 'flex';
 
-            const prompt = `Atue como um Especialista em Suporte de TI.
-Eu gerei um relatório de análise dividindo os dados em vários lotes. Por este motivo, temas semelhantes podem estar espalhados em blocos diferentes.
+const prompt = `Atue como um Especialista em Suporte de TI.
+Eu gerei um relatório de análise dividindo os dados em vários lotes. Por causa disso, temas semelhantes podem estar espalhados em blocos diferentes.
 O seu objetivo é fazer uma SEGUNDA PASSAGEM (Consolidação Final):
 1. Leia todo o relatório em lotes abaixo.
-2. Mantenha rigorosamente a estrutura hierárquica estabelecida: primeiro agrupar por 'Sistema' e depois por 'Módulo'.
-3. Dentro de cada Módulo, consolide e agrupe todos os temas que são iguais ou muito semelhantes num único tópico abrangente na mesma seção, somando os IDs/SMS e Clientes afetados.
+2. Agrupe os temas mantendo a separação rigorosa por 'Sistema'. Não funda problemas de sistemas diferentes, mesmo que pareçam similares. Se não houver sistema, mantém no contexto geral.
+3. Agrupe todos os temas que são iguais ou muito semelhantes num único tópico abrangente, somando os IDs/SMS afetados.
 4. Remova completamente as menções aos "Lotes" (Lote 1, Lote 2, etc.) e crie um único relatório unificado, coeso e definitivo.
-5. Mantenha o formato em Markdown limpo (ex: '## Sistema', '### Módulo', '**Tema**:').
-6. Ordene os temas dentro de cada Módulo de forma DECRESCENTE pela quantidade total de SMS/IDs associados (os impactos maiores surgem sempre primeiro).
+5. Mantenha o formato limpo e profissional em Markdown, utilizando '##' para o Título Geral (Sistema) e '###' para os Temas consolidados.
+6. Ordene os temas dentro de cada Sistema de forma DECRESCENTE pela quantidade total de SMS/IDs associados (o tema com o maior número de incidentes agrupados deve ser sempre o primeiro).
 
 Aqui está o relatório bruto dividido em lotes:
 ${rawAnalysisResult}`;
 
-            try {
-                const result = await fetchWithBackoff(
-                    `https://generativelanguage.googleapis.com/v1beta/models/${modelName}:generateContent?key=${apiKey}`,
-                    {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({
-                            contents: [{ parts: [{ text: prompt }] }],
-                            safetySettings: safeSettings
-                        })
-                    }
-                );
+try {
+const result = await fetchWithBackoff(
+`https://generativelanguage.googleapis.com/v1beta/models/${modelName}:generateContent?key=${apiKey}`,
+{
+method: 'POST',
+headers: { 'Content-Type': 'application/json' },
+body: JSON.stringify({
+contents: [{ parts: [{ text: prompt }] }],
+safetySettings: safeSettings
+})
+}
+);
 
-                const candidate = result.candidates?.[0];
-                if (!candidate) throw new Error(`Bloqueio de conteúdo na consolidação.`);
+const candidate = result.candidates?.[0];
+if (!candidate) throw new Error(`Bloqueio de conteúdo na consolidação.`);
 
-                let finalConsolidated = candidate.content?.parts?.[0]?.text?.trim();
+let finalConsolidated = candidate.content?.parts?.[0]?.text?.trim();
 
-                if (finalConsolidated) {
-                    rawAnalysisResult = finalConsolidated;
+if (finalConsolidated) {
+rawAnalysisResult = finalConsolidated;
 
-                    let htmlFormat = finalConsolidated;
-                    htmlFormat = htmlFormat.replace(/\*\*(.*?)\*\*/g, '<strong class="text-slate-900">$1</strong>');
-                    htmlFormat = htmlFormat.replace(/\*(.*?)\*/g, '<em class="text-slate-800">$1</em>');
-                    htmlFormat = htmlFormat.replace(/### (.*?)(?:\n|$)/g, '<h3 class="text-lg font-bold text-slate-800 mt-5 mb-2 border-b pb-1">$1</h3>\n');
-                    htmlFormat = htmlFormat.replace(/## (.*?)(?:\n|$)/g, '<h2 class="text-xl font-extrabold text-indigo-700 mt-6 mb-3 bg-indigo-50 px-3 py-2 rounded-lg inline-block">$1</h2>\n');
-                    htmlFormat = htmlFormat.replace(/\n\n/g, '<br><br>');
+let htmlFormat = finalConsolidated;
+htmlFormat = htmlFormat.replace(/\*\*(.*?)\*\*/g, '<strong class="text-slate-900">$1</strong>');
+htmlFormat = htmlFormat.replace(/\*(.*?)\*/g, '<em class="text-slate-800">$1</em>');
+htmlFormat = htmlFormat.replace(/### (.*?)(?:\n|$)/g, '<h3 class="text-lg font-bold text-slate-800 mt-5 mb-2 border-b pb-1">$1</h3>\n');
+htmlFormat = htmlFormat.replace(/## (.*?)(?:\n|$)/g, '<h2 class="text-xl font-extrabold text-indigo-700 mt-6 mb-3 bg-indigo-50 px-3 py-2 rounded-lg inline-block">$1</h2>\n');
+htmlFormat = htmlFormat.replace(/\n\n/g, '<br><br>');
 
-                    document.getElementById('similarityDescText').innerHTML = `Relatório <strong>Consolidado</strong>. Temas repetidos foram unidos e ordenados por volume de impacto com sucesso.`;
-                    contentArea.innerHTML = htmlFormat;
+document.getElementById('similarityDescText').innerHTML = `Relatório <strong>Consolidado</strong>. Temas repetidos foram unidos e ordenados por volume de impacto com sucesso.`;
+contentArea.innerHTML = htmlFormat;
 
-                    btnConsolidar.classList.add('hidden');
-                    btnConsolidar.classList.remove('flex');
-                }
-            } catch (err) {
-                console.error("Erro na consolidação:", err);
-                alert(`Erro ao tentar consolidar o relatório: ${err.message}`);
+btnConsolidar.classList.add('hidden');
+btnConsolidar.classList.remove('flex');
+}
+} catch (err) {
+console.error("Erro na consolidação:", err);
+alert(`Erro ao tentar consolidar o relatório: ${err.message}`);
 
-                btnConsolidar.innerHTML = originalBtnHTML;
-                btnConsolidar.disabled = false;
-                btnConsolidar.classList.remove('opacity-75', 'cursor-wait');
-                contentArea.innerHTML = originalContentHTML;
+btnConsolidar.innerHTML = originalBtnHTML;
+btnConsolidar.disabled = false;
+btnConsolidar.classList.remove('opacity-75', 'cursor-wait');
+contentArea.innerHTML = originalContentHTML;
 
-                if (err.message.includes('401')) {
-                    localStorage.removeItem('my_sms_gemini_key');
-                }
-            } finally {
-                loader.style.display = 'none';
-                loaderText.textContent = "A processar...";
-            }
-        };
+if (err.message.includes('401')) {
+localStorage.removeItem('my_sms_gemini_key');
+}
+} finally {
+loader.style.display = 'none';
+loaderText.textContent = "A processar...";
+}
+};
 
-        window.saveAnalysisAndMark = async () => {
-            if (!rawAnalysisResult) return;
+window.saveAnalysisAndMark = async () => {
+if (!rawAnalysisResult) return;
 
-            loaderText.textContent = "A guardar análise e a marcar registos...";
-            loader.style.display = 'flex';
+loaderText.textContent = "A guardar análise e a marcar registos...";
+loader.style.display = 'flex';
 
-            try {
-                const analysisId = 'analise_' + Date.now();
-                const targetName = activeTab === 'Saúde' && activeSubTab !== 'Todos' ? `SAÚDE - ${activeSubTab}` : activeTab;
-                const analysisObj = {
-                    id: analysisId,
-                    modulo: targetName,
-                    conteudo: rawAnalysisResult,
-                    data: new Date().toISOString()
-                };
+try {
+const analysisId = 'analise_' + Date.now();
+const targetName = activeTab === 'Saúde' && activeSubTab !== 'Todos' ? `SAÚDE - ${activeSubTab}` : activeTab;
+const analysisObj = {
+id: analysisId,
+modulo: targetName,
+conteudo: rawAnalysisResult,
+data: new Date().toISOString()
+};
 
-                if (isLocalMode) {
-                    savedAnalyses.push(analysisObj);
-                    localStorage.setItem('sms_local_analyses', JSON.stringify(savedAnalyses));
-                } else if (currentUser) {
-                    await setDoc(doc(db, 'artifacts', appIdString, 'public', 'data', 'sms_analyses', analysisId), analysisObj);
-                }
+if (isLocalMode) {
+savedAnalyses.push(analysisObj);
+localStorage.setItem('sms_local_analyses', JSON.stringify(savedAnalyses));
+} else if (currentUser) {
+await setDoc(doc(db, 'artifacts', appIdString, 'public', 'data', 'sms_analyses', analysisId), analysisObj);
+}
 
-                if (isLocalMode) {
-                    analyzedSmsIdsCache.forEach(id => {
-                        let idx = currentData.findIndex(i => i.sms === id);
-                        if (idx > -1) currentData[idx].analisada = true;
-                    });
-                    saveLocalData();
-                    if (window.renderTable) window.renderTable();
-                } else if (currentUser) {
-                    const batchSize = 100;
-                    for (let i = 0; i < analyzedSmsIdsCache.length; i += batchSize) {
-                        const chunk = analyzedSmsIdsCache.slice(i, i + batchSize);
-                        await Promise.all(chunk.map(id => {
-                            const docRef = doc(db, 'artifacts', appIdString, 'public', 'data', 'sms_list', id);
-                            return updateDoc(docRef, { analisada: true });
-                        }));
-                    }
-                }
+if (isLocalMode) {
+analyzedSmsIdsCache.forEach(id => {
+let idx = currentData.findIndex(i => i.sms === id);
+if (idx > -1) currentData[idx].analisada = true;
+});
+saveLocalData();
+if (window.renderTable) window.renderTable();
+} else if (currentUser) {
+const batchSize = 100;
+for (let i = 0; i < analyzedSmsIdsCache.length; i += batchSize) {
+const chunk = analyzedSmsIdsCache.slice(i, i + batchSize);
+await Promise.all(chunk.map(id => {
+const docRef = doc(db, 'artifacts', appIdString, 'public', 'data', 'sms_list', id);
+return updateDoc(docRef, { analisada: true });
+}));
+}
+}
 
-                alert("A análise foi guardada no Histórico! Os registos processados foram marcados como Analisados.");
-                closeSimilarityModal();
-            } catch (error) {
-                console.error("Erro ao guardar análise:", error);
-                alert("Ocorreu um erro ao guardar a análise no banco de dados.");
-            } finally {
-                loader.style.display = 'none';
-                loaderText.textContent = "A processar...";
-            }
-        };
+alert("A análise foi guardada no Histórico! Os registos processados foram marcados como Analisados.");
+closeSimilarityModal();
+} catch (error) {
+console.error("Erro ao guardar análise:", error);
+alert("Ocorreu um erro ao guardar a análise no banco de dados.");
+} finally {
+loader.style.display = 'none';
+loaderText.textContent = "A processar...";
+}
+};
 
-        function categorizarSubSaude(texto) {
-            const t = texto.toLowerCase();
-            if (/\b(ag)\b/i.test(t)) return 'AG';
-            if (/\b(mg)\b/i.test(t)) return 'MG';
-            if (t.includes('moderna')) return 'Moderna';
-            if (t.includes('otto')) return 'Otto';
-            if (t.includes('nexorede')) return 'Nexorede';
-            if (t.includes('conecta')) return 'Conecta';
-            if (t.includes('lean')) return 'Lean';
-            return 'Outros';
-        }
+function categorizarSubSaude(texto) {
+const t = texto.toLowerCase();
+if (/\b(ag)\b/i.test(t)) return 'AG';
+if (/\b(mg)\b/i.test(t)) return 'MG';
+if (t.includes('moderna')) return 'Moderna';
+if (t.includes('otto')) return 'Otto';
+if (t.includes('nexorede')) return 'Nexorede';
+if (t.includes('conecta')) return 'Conecta';
+if (t.includes('lean')) return 'Lean';
+return 'Outros';
+}
 
-        function categorizar(texto) {
-            const t = texto.toLowerCase();
-            if (t.includes('contrato') || t.includes('juridico') || t.includes('alçada') || t.includes('legal')) return 'Jurídico';
-            if (t.includes('pagamento') || t.includes('compra') || t.includes('contabil') || t.includes('fiscal') || t.includes('faturamento')) return 'ERP';
-            if (t.includes('funcionario') || t.includes('folha') || t.includes('ponto') || t.includes('rh') || t.includes('beneficio')) return 'RH';
-            if (t.includes('entrega') || t.includes('estoque') || t.includes('logistica') || t.includes('transporte')) return 'Logística';
-            if (t.includes('medico') || t.includes('paciente') || t.includes('prontuario') || t.includes('saude') || t.includes('hospit')) return 'Saúde';
-            return 'ERP';
-        }
+function categorizar(texto) {
+const t = texto.toLowerCase();
+if (t.includes('contrato') || t.includes('juridico') || t.includes('alçada') || t.includes('legal')) return 'Jurídico';
+if (t.includes('pagamento') || t.includes('compra') || t.includes('contabil') || t.includes('fiscal') || t.includes('faturamento')) return 'ERP';
+if (t.includes('funcionario') || t.includes('folha') || t.includes('ponto') || t.includes('rh') || t.includes('beneficio')) return 'RH';
+if (t.includes('entrega') || t.includes('estoque') || t.includes('logistica') || t.includes('transporte')) return 'Logística';
+if (t.includes('medico') || t.includes('paciente') || t.includes('prontuario') || t.includes('saude') || t.includes('hospit')) return 'Saúde';
+return 'ERP';
+}
 
-        async function uploadData(dataArray) {
-            loader.style.display = 'flex';
+async function uploadData(dataArray) {
+loader.style.display = 'flex';
 
-            if (isLocalMode) {
-                dataArray.forEach(newItem => {
-                    const index = currentData.findIndex(i => i.sms === newItem.sms);
-                    if (index > -1) {
-                        const oldPrevisao = currentData[index].previsao;
-                        const oldAnalisada = currentData[index].analisada;
-                        currentData[index] = { ...currentData[index], ...newItem };
-                        if (oldPrevisao) currentData[index].previsao = oldPrevisao;
-                        if (oldAnalisada) currentData[index].analisada = oldAnalisada;
-                    } else {
-                        currentData.push(newItem);
-                    }
-                });
-                saveLocalData();
-                updateClientDropdown();
-                if (window.renderTable) window.renderTable();
-                loader.style.display = 'none';
-                return;
-            }
+if (isLocalMode) {
+dataArray.forEach(newItem => {
+const index = currentData.findIndex(i => i.sms === newItem.sms);
+if (index > -1) {
+const oldPrevisao = currentData[index].previsao;
+const oldAnalisada = currentData[index].analisada;
+currentData[index] = { ...currentData[index], ...newItem };
+if (oldPrevisao) currentData[index].previsao = oldPrevisao;
+if (oldAnalisada) currentData[index].analisada = oldAnalisada;
+} else {
+currentData.push(newItem);
+}
+});
+saveLocalData();
+updateClientDropdown();
+if (window.renderTable) window.renderTable();
+loader.style.display = 'none';
+return;
+}
 
-            if (!currentUser) {
-                loader.style.display = 'none';
-                return;
-            }
+if (!currentUser) {
+loader.style.display = 'none';
+return;
+}
 
-            try {
-                for (const item of dataArray) {
-                    const docRef = doc(db, 'artifacts', appIdString, 'public', 'data', 'sms_list', item.sms);
-                    await setDoc(docRef, item, { merge: true });
-                }
-            } catch (err) {
-                console.error("Erro ao salvar:", err);
-                if (err.code === 'permission-denied') permissionsErrorModal.classList.remove('hidden');
-            } finally {
-                loader.style.display = 'none';
-            }
-        }
+try {
+for (const item of dataArray) {
+const docRef = doc(db, 'artifacts', appIdString, 'public', 'data', 'sms_list', item.sms);
+await setDoc(docRef, item, { merge: true });
+}
+} catch (err) {
+console.error("Erro ao salvar:", err);
+if (err.code === 'permission-denied') permissionsErrorModal.classList.remove('hidden');
+} finally {
+loader.style.display = 'none';
+}
+}
 
-        function parseText(text, currentTab, currentSubTab) {
-            const normalizedText = text.replace(/\r\n/g, '\n');
-            const lines = normalizedText.split('\n');
-            if (lines.length === 0) return [];
+function parseText(text, currentTab, currentSubTab) {
+const normalizedText = text.replace(/\r\n/g, '\n');
+const lines = normalizedText.split('\n');
+if (lines.length === 0) return [];
 
-            const headerLine = lines[0].toUpperCase();
-            const EXPECTED = headerLine.includes('MODULO') ? 5 : 4;
+const headerLine = lines[0].toUpperCase();
+const EXPECTED = headerLine.includes('MODULO') ? 5 : 4;
 
-            if (headerLine.includes('CLIENTE')) {
-                lines.shift();
-            }
-            const dataText = lines.join('\n');
-            const rawParts = dataText.split('¬');
-            const dataArray = [];
-            let tempValues = [];
+if (headerLine.includes('CLIENTE')) {
+lines.shift();
+}
+const dataText = lines.join('\n');
+const rawParts = dataText.split('¬');
+const dataArray = [];
+let tempValues = [];
 
-            for (let i = 0; i < rawParts.length; i++) {
-                let part = rawParts[i];
+for (let i = 0; i < rawParts.length; i++) {
+let part = rawParts[i];
 
-                if (tempValues.length === EXPECTED - 1) {
-                    const nlMatch = part.match(/([\s\S]*?)\n([\s\S]+)/);
-                    if (nlMatch) {
-                        tempValues.push(nlMatch[1].trim());
-                        processRecord(tempValues, currentTab, currentSubTab, dataArray, EXPECTED);
-                        tempValues = [nlMatch[2].trim()];
-                    } else {
-                        tempValues.push(part.trim());
-                    }
-                } else if (tempValues.length === EXPECTED) {
-                    processRecord(tempValues, currentTab, currentSubTab, dataArray, EXPECTED);
-                    tempValues = [];
-                    const c2 = part.trim();
-                    if (c2) tempValues.push(c2);
-                } else {
-                    tempValues.push(part.trim());
-                }
-            }
-            if (tempValues.length >= 2) {
-                processRecord(tempValues, currentTab, currentSubTab, dataArray, EXPECTED);
-            }
-            return dataArray;
-        }
+if (tempValues.length === EXPECTED - 1) {
+const nlMatch = part.match(/([\s\S]*?)\n([\s\S]+)/);
+if (nlMatch) {
+tempValues.push(nlMatch[1].trim());
+processRecord(tempValues, currentTab, currentSubTab, dataArray, EXPECTED);
+tempValues = [nlMatch[2].trim()];
+} else {
+tempValues.push(part.trim());
+}
+} else if (tempValues.length === EXPECTED) {
+processRecord(tempValues, currentTab, currentSubTab, dataArray, EXPECTED);
+tempValues = [];
+const c2 = part.trim();
+if (c2) tempValues.push(c2);
+} else {
+tempValues.push(part.trim());
+}
+}
+if (tempValues.length >= 2) {
+processRecord(tempValues, currentTab, currentSubTab, dataArray, EXPECTED);
+}
+return dataArray;
+}
 
-        function processRecord(values, currentTab, currentSubTab, dataArray, expectedCols) {
-            let c = values[0];
-            if (c && c.includes('\n')) c = c.split('\n').pop().trim();
+function processRecord(values, currentTab, currentSubTab, dataArray, expectedCols) {
+let c = values[0];
+if (c && c.includes('\n')) c = c.split('\n').pop().trim();
 
-            const s = values[1];
-            const d = values[2];
-            const r = values[3];
-            const m = expectedCols === 5 ? values[4] : "";
+const s = values[1];
+const d = values[2];
+const r = values[3];
+const m = expectedCols === 5 ? values[4] : "";
 
-            const cleanC = c ? c.trim() : '';
-            const cleanS = s ? s.trim() : '';
-            const cleanD = d ? d.trim() : '';
-            const cleanR = r ? r.trim() : '';
-            const cleanM = m ? m.trim() : '';
+const cleanC = c ? c.trim() : '';
+const cleanS = s ? s.trim() : '';
+const cleanD = d ? d.trim() : '';
+const cleanR = r ? r.trim() : '';
+const cleanM = m ? m.trim() : '';
 
-            if (cleanC && cleanS && cleanS.length < 50 && !cleanS.includes('/') && cleanC.toUpperCase() !== 'CLIENTE') {
-                const calculadoAba = (currentTab !== 'Todos') ? currentTab : categorizar((cleanD || "") + " " + (cleanR || ""));
+if (cleanC && cleanS && cleanS.length < 50 && !cleanS.includes('/') && cleanC.toUpperCase() !== 'CLIENTE') {
+const calculadoAba = (currentTab !== 'Todos') ? currentTab : categorizar((cleanD || "") + " " + (cleanR || ""));
 
-                let calculadoSubModulo = "";
-                if (calculadoAba === 'Saúde') {
-                    if (currentSubTab && currentSubTab !== 'Todos') {
-                        calculadoSubModulo = currentSubTab;
-                    } else {
-                        calculadoSubModulo = categorizarSubSaude((cleanM || "") + " " + (cleanD || "") + " " + (cleanR || ""));
-                    }
-                }
+let calculadoSubModulo = "";
+if (calculadoAba === 'Saúde') {
+if (currentSubTab && currentSubTab !== 'Todos') {
+calculadoSubModulo = currentSubTab;
+} else {
+calculadoSubModulo = categorizarSubSaude((cleanM || "") + " " + (cleanD || "") + " " + (cleanR || ""));
+}
+}
 
-                dataArray.push({
-                    cliente: cleanC,
-                    sms: cleanS,
-                    descricao: cleanD,
-                    resumo: cleanR,
-                    modulo_sistema: cleanM,
-                    modulo: calculadoAba,
-                    sub_modulo: calculadoSubModulo,
-                    timestamp: Date.now(),
-                    analisada: false
-                });
-            }
-        }
+dataArray.push({
+cliente: cleanC,
+sms: cleanS,
+descricao: cleanD,
+resumo: cleanR,
+modulo_sistema: cleanM,
+modulo: calculadoAba,
+sub_modulo: calculadoSubModulo,
+timestamp: Date.now(),
+analisada: false
+});
+}
+}
 
-        window.changeTab = (tab) => {
-            activeTab = tab;
+window.changeTab = (tab) => {
+activeTab = tab;
 
-            if (activeTab !== 'Saúde') {
-                activeSubTab = 'Todos';
-            }
+if (activeTab !== 'Saúde') {
+activeSubTab = 'Todos';
+}
 
-            document.querySelectorAll('.tab-btn').forEach(b => {
-                b.classList.remove('tab-active');
-                if (b.id === `tab-${tab}`) b.classList.add('tab-active');
-            });
+document.querySelectorAll('.tab-btn').forEach(b => {
+b.classList.remove('tab-active');
+if (b.id === `tab-${tab}`) b.classList.add('tab-active');
+});
 
-            const btnAnalyze = document.getElementById('btnAnalyzeThemes');
-            const btnDeleteAll = document.getElementById('btnDeleteAllTab');
-            const uploadLabel = document.getElementById('uploadLabel');
-            const subTabsContainer = document.getElementById('subTabsContainer');
-            const defaultBorder = document.getElementById('defaultBorder');
+const btnAnalyze = document.getElementById('btnAnalyzeThemes');
+const btnDeleteAll = document.getElementById('btnDeleteAllTab');
+const uploadLabel = document.getElementById('uploadLabel');
+const subTabsContainer = document.getElementById('subTabsContainer');
+const defaultBorder = document.getElementById('defaultBorder');
 
-            if (activeTab === 'Saúde') {
-                subTabsContainer.classList.remove('hidden');
-                subTabsContainer.classList.add('flex');
-                defaultBorder.classList.add('hidden');
+if (activeTab === 'Saúde') {
+subTabsContainer.classList.remove('hidden');
+subTabsContainer.classList.add('flex');
+defaultBorder.classList.add('hidden');
 
-                document.querySelectorAll('.subtab-btn').forEach(b => {
-                    b.classList.remove('subtab-active');
-                    if (b.id === `subtab-${activeSubTab}`) b.classList.add('subtab-active');
-                });
-            } else {
-                subTabsContainer.classList.add('hidden');
-                subTabsContainer.classList.remove('flex');
-                defaultBorder.classList.remove('hidden');
-            }
+document.querySelectorAll('.subtab-btn').forEach(b => {
+b.classList.remove('subtab-active');
+if (b.id === `subtab-${activeSubTab}`) b.classList.add('subtab-active');
+});
+} else {
+subTabsContainer.classList.add('hidden');
+subTabsContainer.classList.remove('flex');
+defaultBorder.classList.remove('hidden');
+}
 
-            if (activeTab === 'Todos') {
-                btnAnalyze.classList.add('hidden');
-                btnAnalyze.classList.remove('flex');
-                btnDeleteAll.classList.add('hidden');
-                btnDeleteAll.classList.remove('flex');
-                uploadLabel.textContent = "Subir ficheiro (Auto-categorizado):";
-            } else {
-                btnAnalyze.classList.remove('hidden');
-                btnAnalyze.classList.add('flex');
-                btnDeleteAll.classList.remove('hidden');
-                btnDeleteAll.classList.add('flex');
+if (activeTab === 'Todos') {
+btnAnalyze.classList.add('hidden');
+btnAnalyze.classList.remove('flex');
+btnDeleteAll.classList.add('hidden');
+btnDeleteAll.classList.remove('flex');
+uploadLabel.textContent = "Subir ficheiro (Auto-categorizado):";
+} else {
+btnAnalyze.classList.remove('hidden');
+btnAnalyze.classList.add('flex');
+btnDeleteAll.classList.remove('hidden');
+btnDeleteAll.classList.add('flex');
 
-                if (activeTab === 'Saúde') {
-                    uploadLabel.textContent = activeSubTab === 'Todos' ? `Subir para Saúde (Auto-categorizado):` : `Subir para Saúde ➔ ${activeSubTab}:`;
-                } else {
-                    uploadLabel.textContent = `Subir ficheiro para a aba ${activeTab}:`;
-                }
-            }
+if (activeTab === 'Saúde') {
+uploadLabel.textContent = activeSubTab === 'Todos' ? `Subir para Saúde (Auto-categorizado):` : `Subir para Saúde ➔ ${activeSubTab}:`;
+} else {
+uploadLabel.textContent = `Subir ficheiro para a aba ${activeTab}:`;
+}
+}
 
-            if (window.renderTable) window.renderTable();
-        };
+if (window.renderTable) window.renderTable();
+};
 
-        window.changeSubTab = (subTab) => {
-            activeSubTab = subTab;
+window.changeSubTab = (subTab) => {
+activeSubTab = subTab;
 
-            document.querySelectorAll('.subtab-btn').forEach(b => {
-                b.classList.remove('subtab-active');
-                if (b.id === `subtab-${subTab}`) b.classList.add('subtab-active');
-            });
+document.querySelectorAll('.subtab-btn').forEach(b => {
+b.classList.remove('subtab-active');
+if (b.id === `subtab-${subTab}`) b.classList.add('subtab-active');
+});
 
-            const uploadLabel = document.getElementById('uploadLabel');
-            if (activeSubTab === 'Todos') {
-                uploadLabel.textContent = `Subir para Saúde (Auto-categorizado):`;
-            } else {
-                uploadLabel.textContent = `Subir para Saúde ➔ ${activeSubTab}:`;
-            }
+const uploadLabel = document.getElementById('uploadLabel');
+if (activeSubTab === 'Todos') {
+uploadLabel.textContent = `Subir para Saúde (Auto-categorizado):`;
+} else {
+uploadLabel.textContent = `Subir para Saúde ➔ ${activeSubTab}:`;
+}
 
-            if (window.renderTable) window.renderTable();
-        }
+if (window.renderTable) window.renderTable();
+}
 
-        function renderTable() {
-            if (!tableBody) return;
+function renderTable() {
+if (!tableBody) return;
 
-            tableBody.innerHTML = '';
+tableBody.innerHTML = '';
 
-            const searchTerm = searchInput.value.toLowerCase();
-            const clientTerm = clientFilter.value;
-            const hideAnalyzed = hideAnalyzedCheckbox.checked;
+const searchTerm = searchInput.value.toLowerCase();
+const clientTerm = clientFilter.value;
+const hideAnalyzed = hideAnalyzedCheckbox.checked;
 
-            let filtered = activeTab !== 'Todos'
-                ? currentData.filter(i => i.modulo === activeTab)
-                : currentData;
+let filtered = activeTab !== 'Todos'
+? currentData.filter(i => i.modulo === activeTab)
+: currentData;
 
-            if (activeTab === 'Saúde' && activeSubTab !== 'Todos') {
-                filtered = filtered.filter(i => i.sub_modulo === activeSubTab);
-            }
+if (activeTab === 'Saúde' && activeSubTab !== 'Todos') {
+filtered = filtered.filter(i => i.sub_modulo === activeSubTab);
+}
 
-            if (clientTerm) {
-                filtered = filtered.filter(i => i.cliente === clientTerm);
-            }
+if (clientTerm) {
+filtered = filtered.filter(i => i.cliente === clientTerm);
+}
 
-            if (searchTerm) {
-                filtered = filtered.filter(i =>
-                    i.cliente.toLowerCase().includes(searchTerm) ||
-                    i.sms.toLowerCase().includes(searchTerm) ||
-                    i.descricao.toLowerCase().includes(searchTerm) ||
-                    i.resumo.toLowerCase().includes(searchTerm) ||
-                    (i.modulo_sistema && i.modulo_sistema.toLowerCase().includes(searchTerm))
-                );
-            }
+if (searchTerm) {
+filtered = filtered.filter(i =>
+i.cliente.toLowerCase().includes(searchTerm) ||
+i.sms.toLowerCase().includes(searchTerm) ||
+i.descricao.toLowerCase().includes(searchTerm) ||
+i.resumo.toLowerCase().includes(searchTerm) ||
+(i.modulo_sistema && i.modulo_sistema.toLowerCase().includes(searchTerm))
+);
+}
 
-            if (hideAnalyzed) {
-                filtered = filtered.filter(i => !i.analisada);
-            }
+if (hideAnalyzed) {
+filtered = filtered.filter(i => !i.analisada);
+}
 
-            rowCount.textContent = filtered.length;
+rowCount.textContent = filtered.length;
 
-            if (filtered.length === 0) {
-                noResults.classList.remove('hidden');
-            } else {
-                noResults.classList.add('hidden');
+if (filtered.length === 0) {
+noResults.classList.remove('hidden');
+} else {
+noResults.classList.add('hidden');
 
-                filtered.forEach(item => {
-                    const tr = document.createElement('tr');
-                    tr.className = "hover:bg-slate-50 transition-colors";
+filtered.forEach(item => {
+const tr = document.createElement('tr');
+tr.className = "hover:bg-slate-50 transition-colors";
 
-                    const dataPrevisao = item.previsao ? item.previsao : '';
+const dataPrevisao = item.previsao ? item.previsao : '';
 
-                    const statusBadge = item.analisada
-                        ? `<span class="text-[9px] px-1.5 py-0.5 rounded bg-green-100 text-green-700 font-bold uppercase tracking-wider ml-2 border border-green-200" title="Esta SMS já fez parte de uma Análise de Temas.">✓ Analisada</span>`
-                        : '';
+const statusBadge = item.analisada
+? `<span class="text-[9px] px-1.5 py-0.5 rounded bg-green-100 text-green-700 font-bold uppercase tracking-wider ml-2 border border-green-200" title="Esta SMS já fez parte de uma Análise de Temas.">✓ Analisada</span>`
+: '';
 
-                    const moduloSistemaBadge = item.modulo_sistema
-                        ? `<span class="text-[10px] px-2 py-0.5 rounded bg-blue-100 text-blue-700 font-bold uppercase tracking-wider border border-blue-200" title="Sistema / Módulo Interno">${item.modulo_sistema}</span>`
-                        : '';
+const moduloSistemaBadge = item.modulo_sistema
+? `<span class="text-[10px] px-2 py-0.5 rounded bg-blue-100 text-blue-700 font-bold uppercase tracking-wider border border-blue-200" title="Sistema / Módulo Interno">${item.modulo_sistema}</span>`
+: '';
 
-                    const subModuloBadge = item.sub_modulo && item.modulo === 'Saúde'
-                        ? `<span class="text-[10px] px-2 py-0.5 rounded bg-purple-100 text-purple-700 font-bold uppercase tracking-wider border border-purple-200" title="Sub-área da Saúde">${item.sub_modulo}</span>`
-                        : '';
+const subModuloBadge = item.sub_modulo && item.modulo === 'Saúde'
+? `<span class="text-[10px] px-2 py-0.5 rounded bg-purple-100 text-purple-700 font-bold uppercase tracking-wider border border-purple-200" title="Sub-área da Saúde">${item.sub_modulo}</span>`
+: '';
 
-                    tr.innerHTML = `
-                        <td class="px-5 py-4 text-sm font-bold text-slate-700 align-top break-words">${item.cliente}</td>
-                        <td class="px-5 py-4 text-sm align-top break-words">
-                            <span class="sms-badge">${item.sms}</span>
-                            <div class="mt-2 flex items-center flex-wrap gap-1">
-                                <span class="text-[10px] px-2 py-0.5 rounded bg-slate-200 text-slate-600 font-bold uppercase tracking-wider">${item.modulo}</span>
-                                ${subModuloBadge}
-                                ${moduloSistemaBadge}
-                                ${statusBadge}
-                            </div>
-                        </td>
-                        <td class="px-5 py-4 align-top max-w-[15rem] sm:max-w-[20rem] md:max-w-[25rem] lg:max-w-[35rem] xl:max-w-[50rem]">
-                            <div class="text-sm font-semibold text-slate-800 mb-1 break-words">${item.resumo}</div>
-                            <div class="text-xs text-slate-500 description-cell">${item.descricao}</div>
-                        </td>
-                        <td class="px-5 py-4 align-top">
-                            <input type="date" value="${dataPrevisao}" onchange="updateDate('${item.sms}', this.value)" 
-                                   class="w-full text-sm p-2 border border-slate-300 rounded-lg text-slate-700 outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 bg-white transition-all cursor-pointer">
-                        </td>
-                        <td class="px-5 py-4 align-top text-center">
-                            <div class="flex items-center justify-center gap-1 flex-wrap">
-                                <button onclick="generateAISummary('${item.sms}')" title="Resumir com IA (Gemini)" class="text-indigo-500 hover:text-indigo-700 hover:bg-indigo-50 p-2 rounded-lg transition-colors">
-                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                        <path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3Z"/>
-                                    </svg>
-                                </button>
-                                <button onclick="generateActionPlan('${item.sms}')" title="Gerar Plano de Ação e Resposta (IA)" class="text-emerald-500 hover:text-emerald-700 hover:bg-emerald-50 p-2 rounded-lg transition-colors">
-                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                        <path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"></path>
-                                        <rect x="8" y="2" width="8" height="4" rx="1" ry="1"></rect>
-                                        <path d="M9 14h6"></path>
-                                        <path d="M9 18h6"></path>
-                                        <path d="M9 10h6"></path>
-                                    </svg>
-                                </button>
-                                <button onclick="openDeleteModal('${item.sms}')" title="Excluir SMS" class="text-slate-400 hover:text-red-500 hover:bg-red-50 p-2 rounded-lg transition-colors">
-                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                                    </svg>
-                                </button>
-                            </div>
-                        </td>
-                    `;
-                    tableBody.appendChild(tr);
-                });
-            }
-        }
-        window.renderTable = renderTable;
+tr.innerHTML = `
+                       <td class="px-5 py-4 text-sm font-bold text-slate-700 align-top break-words">${item.cliente}</td>
+                       <td class="px-5 py-4 text-sm align-top break-words">
+                           <span class="sms-badge">${item.sms}</span>
+                           <div class="mt-2 flex items-center flex-wrap gap-1">
+                               <span class="text-[10px] px-2 py-0.5 rounded bg-slate-200 text-slate-600 font-bold uppercase tracking-wider">${item.modulo}</span>
+                               ${subModuloBadge}
+                               ${moduloSistemaBadge}
+                               ${statusBadge}
+                           </div>
+                       </td>
+                       <td class="px-5 py-4 align-top max-w-[15rem] sm:max-w-[20rem] md:max-w-[25rem] lg:max-w-[35rem] xl:max-w-[50rem]">
+                           <div class="text-sm font-semibold text-slate-800 mb-1 break-words">${item.resumo}</div>
+                           <div class="text-xs text-slate-500 description-cell">${item.descricao}</div>
+                       </td>
+                       <td class="px-5 py-4 align-top">
+                           <input type="date" value="${dataPrevisao}" onchange="updateDate('${item.sms}', this.value)" 
+                                  class="w-full text-sm p-2 border border-slate-300 rounded-lg text-slate-700 outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 bg-white transition-all cursor-pointer">
+                       </td>
+                       <td class="px-5 py-4 align-top text-center">
+                           <div class="flex items-center justify-center gap-1 flex-wrap">
+                               <button onclick="generateAISummary('${item.sms}')" title="Resumir com IA (Gemini)" class="text-indigo-500 hover:text-indigo-700 hover:bg-indigo-50 p-2 rounded-lg transition-colors">
+                                   <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                       <path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3Z"/>
+                                   </svg>
+                               </button>
+                               <button onclick="generateActionPlan('${item.sms}')" title="Gerar Plano de Ação e Resposta (IA)" class="text-emerald-500 hover:text-emerald-700 hover:bg-emerald-50 p-2 rounded-lg transition-colors">
+                                   <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                       <path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"></path>
+                                       <rect x="8" y="2" width="8" height="4" rx="1" ry="1"></rect>
+                                       <path d="M9 14h6"></path>
+                                       <path d="M9 18h6"></path>
+                                       <path d="M9 10h6"></path>
+                                   </svg>
+                               </button>
+                               <button onclick="openDeleteModal('${item.sms}')" title="Excluir SMS" class="text-slate-400 hover:text-red-500 hover:bg-red-50 p-2 rounded-lg transition-colors">
+                                   <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                       <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                                   </svg>
+                               </button>
+                           </div>
+                       </td>
+                   `;
+tableBody.appendChild(tr);
+});
+}
+}
+window.renderTable = renderTable;
 
-        fileInput.addEventListener('change', (e) => {
-            const file = e.target.files[0];
-            if (!file) return;
-            const reader = new FileReader();
-            reader.onload = async (ev) => {
-                const data = parseText(ev.target.result, activeTab, activeSubTab);
-                await uploadData(data);
-                fileInput.value = "";
-            };
-            reader.readAsText(file);
-        });
+fileInput.addEventListener('change', (e) => {
+const file = e.target.files[0];
+if (!file) return;
+const reader = new FileReader();
+reader.onload = async (ev) => {
+const data = parseText(ev.target.result, activeTab, activeSubTab);
+await uploadData(data);
+fileInput.value = "";
+};
+reader.readAsText(file);
+});
 
-        searchInput.addEventListener('input', renderTable);
-        clientFilter.addEventListener('change', renderTable);
+searchInput.addEventListener('input', renderTable);
+clientFilter.addEventListener('change', renderTable);
 
-    </script>
+</script>
 </body>
 
 </html>
