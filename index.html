@@ -173,6 +173,23 @@
             font-size: 12px;
             border: 1px solid #fecaca;
         }
+
+        .pdf-sms-list {
+            margin-top: 16px;
+            padding-top: 12px;
+            border-top: 1px dashed #cbd5e1;
+            font-size: 11px;
+            color: #64748b;
+        }
+
+        .pdf-sms-numbers {
+            display: block;
+            margin-top: 6px;
+            line-height: 1.6;
+            font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+            color: #475569;
+            word-break: break-all;
+        }
     </style>
 </head>
 
@@ -1224,10 +1241,18 @@ service cloud.firestore {
                 } else if (p.startsWith('### ')) {
                     return `<h3 class="pdf-h3">${p.replace(/^###\s*/, '')}</h3>`;
                 } else {
-                    let pContent = p.replace(/\n/g, '<br>');
-                    // Highlight the SMS line
-                    pContent = pContent.replace(/\*?\s*(SMS afetados?:?)/ig, '<br><br><span class="pdf-highlight">$1</span>');
-                    return `<div class="pdf-block"><p>${pContent}</p></div>`;
+                    let smsMatch = p.match(/(?:\n)?\*?\s*(SMS afetados?:?)\s*([\s\S]*)/i);
+                    let mainContent = p;
+                    let smsContent = '';
+
+                    if (smsMatch) {
+                        mainContent = p.substring(0, smsMatch.index).trim();
+                        smsContent = `<div class="pdf-sms-list"><span class="pdf-highlight">${smsMatch[1]}</span><span class="pdf-sms-numbers">${smsMatch[2]}</span></div>`;
+                    }
+
+                    let pContent = mainContent.replace(/\n/g, '<br>');
+
+                    return `<div class="pdf-block"><p>${pContent}</p>${smsContent}</div>`;
                 }
             }).join('');
 
