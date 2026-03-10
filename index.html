@@ -1543,36 +1543,35 @@ Forneça a sua resposta EXATAMENTE no seguinte formato Markdown:
 
                 const batchData = smsDaAbaTotal.slice(currentBatch * BATCH_SIZE, (currentBatch + 1) * BATCH_SIZE);
 
-                let smsListText = `\n\n=== MÓDULO DE NEGÓCIO: ${targetName.toUpperCase()} (LOTE ${currentBatch + 1}) ===\n`;
+                let smsListText = `\n\n=== SISTEMA: ${targetName.toUpperCase()} (LOTE ${currentBatch + 1}) ===\n`;
                 smsListText += batchData.map(i => {
                     const descSegura = sanitizeText(i.descricao).substring(0, 2000);
                     const resumoSeguro = i.resumo ? sanitizeText(i.resumo).substring(0, 500) : "";
-                    const modSis = i.modulo_sistema ? ` | Sistema: ${i.modulo_sistema}` : "";
-                    const mod = i.modulo ? ` | Módulo: ${i.modulo}` : "";
+
+                    const sistema = i.modulo ? ` | Sistema: ${i.modulo}` : ` | Sistema: ${targetName}`;
+                    const modulo = i.modulo_sistema ? ` | Módulo: ${i.modulo_sistema}` : " | Módulo: Não Informado";
+
                     const resumoTexto = resumoSeguro ? `\nResumo: ${resumoSeguro}` : "";
-                    return `[SMS: ${i.sms} | Cliente: ${i.cliente}${modSis}${mod}]\nDescrição: ${descSegura}${resumoTexto}`;
+                    return `[SMS: ${i.sms} | Cliente: ${i.cliente}${sistema}${modulo}]${resumoTexto}\nDescrição: ${descSegura}`;
                 }).join("\n\n---\n\n");
 
                 const prompt = `Atue como um Especialista em Suporte de TI.
-Abaixo estão os registos referentes à área de negócio '${targetName}'. A sua tarefa é efetuar a análise lendo os campos de Descrição e Resumo, interpretando-os para procurar assuntos similares para agrupamento.
+Você está analisando os chamados (SMS) do Sistema '${targetName}'. A sua tarefa é efetuar a análise lendo os campos de 'Descrição' e 'Resumo', interpretando o contexto para agrupar assuntos/problemas rigorosamente similares.
 
-Regras OBRIGATÓRIAS:
+Regras OBRIGATÓRIAS de Agrupamento:
 1. Comece com um cabeçalho '## Resumo Analítico - Lote ${currentBatch + 1}'.
-2. Para que a análise seja mais eficiente, obedeça estritamente à seguinte hierarquia de agrupamento:
-   - 1º: Agrupar por 'Sistema' (analisar e agrupar SMS do mesmo sistema). Não misture SMS de sistemas diferentes no mesmo grupo.
-   - 2º: Dentro de cada Sistema, agrupar por 'Módulo' (analisar e agrupar SMS que sejam do mesmo módulo).
-   - 3º: Dentro de cada Módulo, agrupe os SMS interpretando os campos Descrição/Resumo para juntar problemas com o mesmo assunto.
-3. Se um registo não tiver 'Sistema' ou 'Módulo', agrupe-o num grupo de 'Contexto Geral' ou 'Não Informado'.
-4. Estrutura esperada:
-   ### Sistema: [Nome]
-   #### Módulo: [Nome]
-   **Tema**: [Resumo do Assunto]
-   [Explicação de 1 ou 2 linhas do problema]
-   - Afetados: [Lista de SMS e Clientes]
-5. Forneça uma breve explicação de 1 a 2 linhas sobre o que aquele tema aborda.
-6. Liste os números de SMS exatos e os respetivos Clientes afetados.
-7. Formate a resposta usando Markdown limpo.
-8. Ordene os temas de forma DECRESCENTE pelo número de SMS afetados.
+2. Você DEVE usar a seguinte hierarquia para agrupar os chamados:
+   - 1º Nível (Sistema): Todos os chamados deste lote pertencem ao Sistema listado. Agrupe-os primeiro por este Sistema.
+   - 2º Nível (Módulo): Dentro do Sistema, agrupe os chamados que possuem EXATAMENTE o mesmo 'Módulo' (ex: ES_SOCIAL, DO_DOSSIE). Nunca misture módulos diferentes no mesmo grupo.
+   - 3º Nível (Assunto Similar): Dentro de cada Módulo, leia a 'Descrição' e o 'Resumo' para compreender o cenário. Agrupe os chamados em Temas que tratam do MESMO assunto, erro ou solicitação.
+3. Estrutura de saída ESTA E APENAS ESTA:
+   ## Sistema: [Nome do Sistema]
+   ### Módulo: [Nome do Módulo]
+   **Tema**: [Resumo curto do assunto em comum]
+   [Explicação de 1 a 2 linhas sobre o contexto geral deste problema]
+   - Afetados: [Lista de números de SMS e Clientes]
+4. Ordene os Módulos e, dentro deles, os Temas de forma DECRESCENTE pelo número de chamados afetados.
+5. Formate a resposta usando Markdown limpo, obedecendo às tags descritas.
 
 Aqui estão os dados deste lote:
 ${smsListText}`;
@@ -1675,13 +1674,13 @@ ${smsListText}`;
             loader.style.display = 'flex';
 
             const prompt = `Atue como um Especialista em Suporte de TI.
-Eu gerei um relatório de análise dividindo os dados em vários lotes. Por este motivo, temas semelhantes podem estar espalhados em blocos diferentes.
+Eu gerei um relatório de análise dividindo os dados em vários lotes. Por este motivo, temas semelhantes do mesmo Módulo podem estar espalhados em blocos diferentes.
 O seu objetivo é fazer uma SEGUNDA PASSAGEM (Consolidação Final):
 1. Leia todo o relatório em lotes abaixo.
 2. Mantenha rigorosamente a estrutura hierárquica estabelecida: primeiro agrupar por 'Sistema' e depois por 'Módulo'.
-3. Dentro de cada Módulo, consolide e agrupe todos os temas que são iguais ou muito semelhantes num único tópico abrangente na mesma seção, somando os IDs/SMS e Clientes afetados.
+3. Dentro de cada 'Módulo', interprete os temas. Junte e consolide todos os temas que abordam o mesmo assunto, erro ou solicitação, mesmo se possivelmente redigidos de forma ligeiramente diferente originalmente. Some os IDs/SMS e Clientes afetados.
 4. Remova completamente as menções aos "Lotes" (Lote 1, Lote 2, etc.) e crie um único relatório unificado, coeso e definitivo.
-5. Mantenha o formato em Markdown limpo (ex: '## Sistema', '### Módulo', '**Tema**:').
+5. Mantenha a mesma estrutura Markdown (ex: '## Sistema: [Nome]', '### Módulo: [Nome]', '**Tema**:').
 6. Ordene os temas dentro de cada Módulo de forma DECRESCENTE pela quantidade total de SMS/IDs associados (os impactos maiores surgem sempre primeiro).
 
 Aqui está o relatório bruto dividido em lotes:
